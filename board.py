@@ -102,13 +102,11 @@ class Board:
                     elif neighbour not in self._hexes[opposite_player(player)]:
                         boundary.add(neighbour)
 
-    def winning_move(self, player):
+    def winning_moves(self, player):
         if player == "red":
-            intersection = self._top_boundary.intersection(self._bottom_boundary)
+            return self._top_boundary.intersection(self._bottom_boundary)
         if player == "blue":
-            intersection = self._left_boundary.intersection(self._right_boundary)
-        if intersection:
-            return self.point_to_index(choice(tuple(intersection)))
+            return self._left_boundary.intersection(self._right_boundary)
 
     def _update_sets(self, player, move_point):
         if player == "red":
