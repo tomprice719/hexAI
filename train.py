@@ -12,9 +12,11 @@ positions = torch.tensor(training_data["positions"], dtype = torch.float)
 winners = torch.tensor(training_data["winners"], dtype = torch.float)
 
 dataset = utils.TensorDataset(positions, winners)
-dataloader = utils.DataLoader(dataset)
+dataloader = utils.DataLoader(dataset, batch_size = 32)
 
 input_size = np.prod(positions.size()[1:])
+
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 class ConvNet(nn.Module):
     def __init__(self, hidden_layers, breadth):
@@ -54,12 +56,12 @@ class FCNet(nn.Module):
     def forward(self, x):
         x = x.view(-1, input_size)
         x = torch.tanh(self.fc1(x))
-        #x = F.relu(self.fc2(x))
+        x = F.relu(self.fc2(x))
         #x = F.relu(self.fc3(x))
         x = self.fc4(x)
         return x
 
-net = ConvNet(5, 40)
+net = ConvNet(5, 20).to(device)
 #net = FCNet(100)
 
 criterion = nn.BCEWithLogitsLoss()
@@ -70,12 +72,13 @@ total = 0
 
 start_time = time()
 
+
 for epoch in range(10):  # loop over the dataset multiple times
 
     running_loss = 0.0
-    for i, data in enumerate(dataloader):
+    for i, (inputs, labels) in enumerate(dataloader):
         # get the inputs; data is a list of [inputs, labels]
-        inputs, labels = data
+        inputs, labels = inputs.to(device), labels.to(device)
 
         # zero the parameter gradients
         optimizer.zero_grad()
@@ -84,7 +87,7 @@ for epoch in range(10):  # loop over the dataset multiple times
         outputs = net(inputs)
 
         total += labels.size()[0]
-        correct += ((labels == 1) == (outputs > 0.5)).sum().item()
+        correct += ((labels == 1) == (outputs.view(-1) > 0.5)).sum().item()
 
         loss = criterion(outputs.view(-1), labels)
         loss.backward()
@@ -92,7 +95,7 @@ for epoch in range(10):  # loop over the dataset multiple times
 
         # print statistics
         running_loss += loss.item()
-        if i % 2000 == 1999:    # print every 2000 mini-batches
+        if i % 100 == 0:    # print every 100 mini-batches
             print(time() - start_time)
             last_time = time()
             print('[%d, %5d] loss: %.3f' %
