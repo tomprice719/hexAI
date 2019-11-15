@@ -1,17 +1,18 @@
 from board import Board
 import numpy as np
 from utils import rb, player_sign
+from random import randint
 
 board_size = 5
 num_games = 50000
-#b = Board(board_size)
 
-positions = np.zeros((num_games, 2, board_size + 1, board_size + 1))
-positions [:, 0, 1:, 0] = 1
-positions [:, 1, 0, 1:] = 1
+positions = np.zeros((num_games, board_size + 1, board_size + 1, 2))
+positions[:, 1:, 0, 0] = 1
+positions[:, 0, 1:, 1] = 1
 winners = np.zeros(num_games)
 
 b = Board(board_size)
+
 
 # def make_game():
 #     b.refresh()
@@ -42,20 +43,22 @@ def make_game():
         b.update(rb[i % 2], move)
         if i % 2 == 1 and b.winner != None:
             moves = [b.index_to_point(m) for m in p[:i + 1]]
-            return (moves[::2], moves[1::2], b.winner)
+            return moves[::2], moves[1::2], b.winner
     return make_game()
+
 
 for i in range(num_games):
     if i % 1000 == 0:
         print(i)
     red_moves, blue_moves, winner = make_game()
     for row, column in red_moves:
-        positions[i, 0, row + 1, column + 1] = 1
+        positions[i, row + 1, column + 1, 0] = 1
     for row, column in blue_moves:
-        positions[i, 1, row + 1, column + 1] = 1
+        positions[i, row + 1, column + 1, 1] = 1
     winners[i] = (player_sign[winner] + 1) / 2
+    #winners[i] = randint(0, 1)
 
-np.savez("training_data.npz", positions = positions, winners = winners)
+np.savez("training_data.npz", positions=positions, winners=winners)
 
 # for i in range(num_games):
 #     print(positions[i, 0, :, :])
