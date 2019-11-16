@@ -5,10 +5,10 @@ from utils import rb, player_sign
 board_size = 5
 num_games = 50000
 
-positions = np.zeros((num_games, 2, board_size + 1, board_size + 1))
-positions [:, 0, 1:, 0] = 1
-positions [:, 1, 0, 1:] = 1
-winning_move_array = np.zeros((num_games, board_size, board_size))
+positions = np.zeros((num_games, board_size + 1, board_size + 1, 2))
+positions [:, 1:, 0, 0] = 1
+positions [:, 0, 1:, 1] = 1
+winning_move_array = np.zeros((num_games, board_size, board_size, 1))
 
 b = Board(board_size)
 
@@ -33,11 +33,11 @@ for i in range(num_games):
         print(i)
     red_moves, blue_moves, winning_moves, p = make_game()
     for row, column in red_moves:
-        positions[i, 0, row + 1, column + 1] = 1
+        positions[i, row + 1, column + 1, 0] = 1
     for row, column in blue_moves:
-        positions[i, 1, row + 1, column + 1] = 1
+        positions[i, row + 1, column + 1, 1] = 1
     for row, column in winning_moves:
-        winning_move_array[i, row, column] = 1
+        winning_move_array[i, row, column, 0] = 1
 
     # print(positions[i, 0])
     # print(positions[i, 1])
