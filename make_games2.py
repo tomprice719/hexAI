@@ -3,7 +3,7 @@ import numpy as np
 from utils import rb, player_sign
 
 board_size = 5
-num_games = 50000
+num_games = 500000
 
 positions = np.zeros((num_games, board_size + 1, board_size + 1, 2))
 positions [:, 1:, 0, 0] = 1

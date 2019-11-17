@@ -1,5 +1,4 @@
-from utils import opposite_player
-from random import choice
+from utils import opposite_player, neighbour_difference
 
 symbols = {("red", False) : "o ", ("blue", False) : "* ", "empty": ". ",
            ("red", True): "@ ", ("blue", True) : "# "}
@@ -31,6 +30,8 @@ class Board:
     
     def update(self, player, move):
         point = self.index_to_point(move)
+        assert(point not in self._hexes["red"])
+        assert (point not in self._hexes["blue"])
         self._hexes[player].add(point)
         self._update_sets(player, point)
         self._last_move = point
@@ -78,10 +79,7 @@ class Board:
 
     def _neighbours(self, point):
         i, j = point
-        touching_difference = [(1, 0), (-1, 0),
-                               (0, 1), (0, -1),
-                               (1, -1), (-1, 1)]
-        return [(i + di, j + dj) for di, dj in touching_difference
+        return [(i + di, j + dj) for di, dj in neighbour_difference
                 if 0 <= i + di < self.board_size
                 and 0 <= j + dj < self.board_size]
 

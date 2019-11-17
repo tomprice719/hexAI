@@ -10,7 +10,7 @@ import keras.backend as K
 import matplotlib.pyplot as plt
 
 def metric1(y_true, y_pred):
-    return K.sum(y_true * K.sigmoid(y_pred)) / K.sum(y_true)
+    return 1.0 - K.sum(y_true * K.sigmoid(y_pred)) / K.sum(y_true)
 
 def metric2(y_true, y_pred):
     return K.sum((1 - y_true) * K.sigmoid(y_pred)) / K.sum(1 - y_true)
@@ -45,9 +45,9 @@ def make_up_layer(previous_layer):
 
 def make_down_layer(up_layer1, up_layer2, down_layer):
     layers = [Conv2D(breadth, 3, padding="same")(up_layer1),
-              Gate(-4)(Conv2D(breadth, 3, padding="same")(up_layer2))]
+              Gate(-3)(Conv2D(breadth, 3, padding="same")(up_layer2))]
     if down_layer is not None:
-        layers.append(Gate(-4)(Conv2D(breadth, 3, padding="same")(down_layer)))
+        layers.append(Gate(-3)(Conv2D(breadth, 3, padding="same")(down_layer)))
     return Lambda(lambda x: softplus(x))(Add()(layers))
 
 
@@ -87,7 +87,8 @@ model.fit(
     winning_moves[:-validation_size],
     batch_size = 32,
     validation_data = (positions[-validation_size:], winning_moves[-validation_size:]),
-    epochs = 5
+    epochs = 1000,
+    shuffle = True
 )
 
 predictions = model.predict(positions[:10])
