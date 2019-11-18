@@ -1,3 +1,5 @@
+# predict which player has already won the game
+
 from keras.layers import Conv2D, Input, GlobalAveragePooling2D, Dense, Add
 from keras.models import Model
 from keras.optimizers import Adam

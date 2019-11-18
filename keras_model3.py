@@ -1,29 +1,21 @@
-# predict moves that will immediately win
+# predict winning probability for each potential next move
 
-from keras.layers import Conv2D, Input, Add, ZeroPadding2D, Lambda
+from keras.layers import Conv2D, Input, Add, ZeroPadding2D, Lambda, Multiply, GlobalMaxPooling2D
 from keras.models import Model
 from keras.optimizers import Adam
 from keras.losses import BinaryCrossentropy
+from keras.metrics import BinaryAccuracy
 from keras.activations import relu
 import numpy as np
-import keras.backend as K
 import matplotlib.pyplot as plt
 from custom_layers import Gate
-
-
-def metric1(y_true, y_pred):
-    return 1.0 - K.sum(y_true * K.sigmoid(y_pred)) / K.sum(y_true)
-
-
-def metric2(y_true, y_pred):
-    return K.sum((1 - y_true) * K.sigmoid(y_pred)) / K.sum(1 - y_true)
-
 
 depth = 4
 breadth = 40
 
-input_tensor = Input(shape=(6, 6, 2))
-up_layers = [input_tensor]
+position_tensor = Input(shape=(6, 6, 2))
+next_move_tensor = Input(shape=(5, 5, 1))
+up_layers = [position_tensor]
 
 
 def make_up_layer(previous_layer):
@@ -48,49 +40,35 @@ down_layer = None
 for i, up_layer in enumerate(up_layers[:-1]):
     down_layer = make_down_layer(up_layers[i + 1], up_layer, down_layer)
 
-output_layer = Add()([Conv2D(1, 3, padding="valid")(ZeroPadding2D(((0, 1), (0, 1)))(input_tensor)),
+output_layer = Add()([Conv2D(1, 3, padding="valid")(ZeroPadding2D(((0, 1), (0, 1)))(position_tensor)),
                       Conv2D(1, 3, padding="valid")(ZeroPadding2D(((0, 1), (0, 1)))(down_layer))])
 
-model = Model([input_tensor], [output_layer])
+scalar_output = GlobalMaxPooling2D()(Multiply()([output_layer, next_move_tensor]))
+
+model = Model([position_tensor, next_move_tensor], [scalar_output])
 
 optimizer = Adam(lr=0.001)
 
 model.compile(
     loss=BinaryCrossentropy(from_logits=True),
     optimizer=optimizer,
-    metrics=[metric1, metric2]
+    metrics=[BinaryAccuracy(threshold=0)]
 )
 
-data = np.load("training_data2.npz")
+data = np.load("training_data3.npz")
 positions = data["positions"]
-winning_moves = data["winning_moves"]
+moves = data["moves"]
+winners = data["winners"]
 
 fig = plt.figure(figsize=(8, 8))
 
 validation_size = 10000
 
 model.fit(
-    positions[:-validation_size],
-    winning_moves[:-validation_size],
+    [positions[:-validation_size], moves[:-validation_size]],
+    winners[:-validation_size],
     batch_size=32,
-    validation_data=(positions[-validation_size:], winning_moves[-validation_size:]),
+    validation_split=0.01,
     epochs=1000,
     shuffle=True
 )
-
-predictions = model.predict(positions[:10])
-
-for i in range(5):
-    fig.add_subplot(4, 5, i + 1)
-    plt.imshow(positions[i, :, :, 0])
-for i in range(5):
-    fig.add_subplot(4, 5, i + 6)
-    plt.imshow(positions[i, :, :, 1])
-for i in range(5):
-    fig.add_subplot(4, 5, i + 11)
-    plt.imshow(winning_moves[i, :, :, 0])
-for i in range(5):
-    fig.add_subplot(4, 5, i + 16)
-    plt.imshow(predictions[i, :, :, 0])
-
-plt.show()
