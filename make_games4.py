@@ -1,14 +1,11 @@
 from board import Board
 import numpy as np
-from utils import rb, player_sign, neighbour_difference, opposite_player
-import matplotlib.pyplot as plt
+from utils import rb, neighbour_difference, opposite_player
 
 board_size = 5
 num_games = 10000
 
 board = Board(board_size)
-
-end_length = 8
 
 def get_bridge_saving_moves(board, player, move):
     def get_colour(point):
@@ -68,28 +65,22 @@ def make_game(starting_moves=(), index=None):
     print(board)  # should never get here, printing board might give useful debugging information if we do
 
 
-def add_training_data(moves, winner, positions_array, moves_array, winners_array):
+def add_training_data(moves, winner, positions_array, winners_array):
     p, p_swapped = np.zeros_like(positions_array[0, 1:, 1:]), np.zeros_like(positions_array[0, 1:, 1:])
     for i, move in enumerate(moves):
         a, b = move
-        # update training data, possibly swapping colours so that current player is always red
-        j = i + end_length - len(moves)
-        if j >= 0:
-            positions_array[j, 1:, 1:] = (p, p_swapped)[i % 2]
-            next_move = (a, b) if j % 2 == 0 else (b, a)
-            moves_array[j][next_move] = 1
-            winners_array[j] = winner == i % 2
         # Update temporary boards
         p[a, b, i % 2] = 1
         p_swapped[b, a, (i + 1) % 2] = 1
+        # update training data, possibly swapping colours so that current player is always red
+        positions_array[i, 1:, 1:] = (p, p_swapped)[i % 2]
+        winners_array[i] = winner == i % 2
 
 
 games = [make_game(index=i) for i in range(num_games)]
-#total_moves = sum(len(moves) for moves, winner in games)
-total_moves = num_games * end_length
+total_moves = sum(len(moves) for moves, winner in games)
 
 positions_array = np.zeros((total_moves, board_size + 1, board_size + 1, 2))
-moves_array = np.zeros((total_moves, board_size, board_size))
 winners_array = np.zeros(total_moves)
 
 positions_array[:, 1:, 0, 0] = 1
@@ -101,22 +92,19 @@ while games:
     if len(games) % 1000 == 0:
         print(len(games), "more games to process.")
     moves, winner = games.pop()
-    _slice = np.index_exp[total_moves_counter: total_moves_counter + end_length]
+    _slice = np.index_exp[total_moves_counter: total_moves_counter + len(moves)]
     add_training_data(moves, winner,
                       positions_array[_slice],
-                      moves_array[_slice],
                       winners_array[_slice])
     #total_moves_counter += len(moves)
-    total_moves_counter += end_length
+    total_moves_counter += len(moves)
 
-# for i in range(50, 70):
+# for i in range(100):
 #     print(positions_array[i, :, :, 0])
 #     print(positions_array[i, :, :, 1])
-#     print(moves_array[i])
 #     print(winners_array[i])
 #     print("--------------------------------------------")
 
-np.savez("training_data3.npz",
+np.savez("training_data4.npz",
          positions=positions_array,
-         moves=np.expand_dims(moves_array, axis=3),
          winners=winners_array)

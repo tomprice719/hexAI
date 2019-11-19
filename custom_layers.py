@@ -10,11 +10,11 @@ class Gate(Layer):
 
     def build(self, input_shape):
         # Create a trainable weight variable for this layer.
-        self.var = self.add_weight(initializer=Constant(self.var_init), trainable=True)
+        #self.var = self.add_weight(initializer=Constant(self.var_init), trainable=True)
         super(Gate, self).build(input_shape)  # Be sure to call this at the end
 
     def call(self, x, **kwargs):
-        return x * softplus(self.var)
+        return x #* softplus(self.var)
 
     def compute_output_shape(self, input_shape):
         return input_shape
