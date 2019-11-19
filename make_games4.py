@@ -92,10 +92,9 @@ while games:
     if len(games) % 1000 == 0:
         print(len(games), "more games to process.")
     moves, winner = games.pop()
-    _slice = np.index_exp[total_moves_counter: total_moves_counter + len(moves)]
     add_training_data(moves, winner,
-                      positions_array[_slice],
-                      winners_array[_slice])
+                      positions_array[total_moves_counter: total_moves_counter + len(moves)],
+                      winners_array[total_moves_counter: total_moves_counter + len(moves)])
     #total_moves_counter += len(moves)
     total_moves_counter += len(moves)
 
