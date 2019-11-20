@@ -16,7 +16,7 @@ initial_position[0, 1:, 1] = 1
 
 class GameMaker:
 
-    def __init__(self, board_size):
+    def __init__(self, board_size, num_initial_moves):
         self.current_player = 0
         self.moves_played = []
         self.valid_moves = list(range(self.board.board_size ** 2))
@@ -24,6 +24,9 @@ class GameMaker:
         self.positions = dict()
         for player_perspective, flipped in itertools.product((0, 1), (False, True)):
             self.positions[(player_perspective, flipped)] = np.copy(initial_position)
+        self.num_initial_moves = num_initial_moves
+        for move_index in np.random.choice(self.valid_moves, size=num_initial_moves, replace=False):
+            self._play_move(move_index)
 
     def _get_position(self, player_perspective, flipped):
         return self.positions[(player_perspective, flipped)]
@@ -44,6 +47,8 @@ class GameMaker:
         self.board.refresh()
         for player_perspective, flipped in itertools.product((0, 1), (False, True)):
             np.copyto(self._get_position(player_perspective, flipped), initial_position)
+        for move_index in np.random.choice(self.valid_moves, size=self.num_initial_moves, replace=False):
+            self._play_move(move_index)
 
     def fill_positions(self, position_array):
         position_array[:len(self.valid_moves)] = self._get_position(self.current_player, False)
@@ -56,28 +61,32 @@ class GameMaker:
             position_array[i, a, b, 0] = 1
             position_array[i, self.board.board_size - a, self.board.board_size - b, 0] = 1
 
-    def update(self, win_probs):
-        best_move_index = max(range(len(self.valid_moves)),
-                        key=lambda x: win_probs[x] + win_probs[x + len(self.valid_moves)])
-        best_move = self.valid_moves[best_move_index]
-        a, b = self.board.index_to_point(self.valid_moves[best_move_index])
+    def _play_move(self, move_index):
+        """Plays a move on the board, where the move is specified by its index in valid_moves"""
+        move = self.valid_moves[move_index]
+        a, b = self.board.index_to_point(move)
 
         for player_perspective, flipped in itertools.product((0, 1), (False, True)):
             a1, b1 = (a, b) if player_perspective == 0 else (b, a)
             a2, b2 = (self.board.board_size - a1, self.board.board_size - b1) if flipped else (a1, b1)
             self._get_position(player_perspective, flipped)[a2, b2, self.current_player + player_perspective % 2] = 1
 
-        self.board.update(rb(self.current_player), best_move)
+        self.board.update(rb(self.current_player), move)
         self.current_player = 1 - self.current_player
-        self.valid_moves[best_move_index] = self.valid_moves[-1]
+        self.valid_moves[move_index] = self.valid_moves[-1]
         del self.valid_moves[-1]
-        self.moves_played.append(best_move)
+        self.moves_played.append(move)
+
+    def update(self, win_probs):
+        best_move_index = max(range(len(self.valid_moves)),
+                              key=lambda x: win_probs[x] + win_probs[x + len(self.valid_moves)])
+        self._play_move(best_move_index)
 
 
 board_size = 5
 batch_size = 5  # number of games to create simultaneously
 games_required = 10000
-game_makers = [GameMaker() for _ in range(batch_size)]
+game_makers = [GameMaker(board_size, 4) for _ in range(batch_size)]
 games = []
 
 while len(games) < games_required:
