@@ -57,9 +57,10 @@ class GameMaker:
             position_array[i, self.board.board_size - a, self.board.board_size - b, 0] = 1
 
     def update(self, win_probs):
-        best_move = max(range(len(self.valid_moves)),
+        best_move_index = max(range(len(self.valid_moves)),
                         key=lambda x: win_probs[x] + win_probs[x + len(self.valid_moves)])
-        a, b = self.board.index_to_point(best_move)
+        best_move = self.valid_moves[best_move_index]
+        a, b = self.board.index_to_point(self.valid_moves[best_move_index])
 
         for player_perspective, flipped in itertools.product((0, 1), (False, True)):
             a1, b1 = (a, b) if player_perspective == 0 else (b, a)
@@ -68,7 +69,8 @@ class GameMaker:
 
         self.board.update(rb(self.current_player), best_move)
         self.current_player = 1 - self.current_player
-        self.valid_moves.remove(best_move)
+        self.valid_moves[best_move_index] = self.valid_moves[-1]
+        del self.valid_moves[-1]
         self.moves_played.append(best_move)
 
 
