@@ -1,3 +1,4 @@
 *.npz
-*.idea
+.idea/
 *.pyc
+*.h5

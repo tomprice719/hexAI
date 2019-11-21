@@ -5,6 +5,7 @@ from keras.models import Model
 from keras.optimizers import Adam
 from keras.losses import BinaryCrossentropy
 from keras.metrics import BinaryAccuracy
+from functools import partial
 import numpy as np
 
 depth = 5
@@ -29,26 +30,25 @@ optimizer = Adam(lr=0.001)
 model.compile(
     loss=BinaryCrossentropy(from_logits=True),
     optimizer=optimizer,
-    metrics=[BinaryAccuracy(threshold=0)]
+    metrics=[BinaryAccuracy(threshold=0.0)]
 )
 
-data = np.load("training_data4.npz")
-positions = data["positions"]
-winners = data["winners"]
+if __name__ == "__main__":
+    data = np.load("training_data4.npz")
+    positions = data["positions"]
+    winners = data["winners"]
 
-print(winners[:10])
+    print(winners[:10])
 
-validation_size = 10000
+    validation_size = 10000
 
-model.fit(
-    positions[:-validation_size],
-    winners[:-validation_size],
-    batch_size=32,
-    validation_data=(positions[-validation_size:], winners[-validation_size:]),
-    epochs=5,
-    shuffle=True
-)
+    model.fit(
+        positions[:-validation_size],
+        winners[:-validation_size],
+        batch_size=32,
+        validation_data=(positions[-validation_size:], winners[-validation_size:]),
+        epochs=2,
+        shuffle=True
+    )
 
-predictions = model.predict(positions)
-print(predictions[:10])
-print(winners[:10])
+    model.save_weights('my_model.h5')
