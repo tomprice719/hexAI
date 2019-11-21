@@ -74,7 +74,7 @@ def add_training_data(moves, winner, positions_array, winners_array):
         p_swapped[b, a, (i + 1) % 2] = 1
         # update training data, possibly swapping colours so that current player is always red
         positions_array[i, 1:, 1:] = (p, p_swapped)[i % 2]
-        winners_array[i] = winner == i % 2
+        winners_array[i] = (winner == i % 2)
 
 
 games = [make_game(index=i) for i in range(num_games)]

@@ -1,6 +1,6 @@
 from board import Board
 import numpy as np
-from utils import rb, player_sign
+from utils import rb, player_index
 
 board_size = 5
 num_games = 500000

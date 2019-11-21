@@ -8,8 +8,8 @@ from keras.metrics import BinaryAccuracy
 from functools import partial
 import numpy as np
 
-depth = 5
-breadth = 40
+depth = 8
+breadth = 80
 
 input_tensor = Input(shape=(6, 6, 2))
 out_components = []
@@ -34,11 +34,11 @@ model.compile(
 )
 
 if __name__ == "__main__":
-    data = np.load("training_data4.npz")
+    data = np.load("training_data5.npz")
     positions = data["positions"]
     winners = data["winners"]
 
-    print(winners[:10])
+    print(winners[:100])
 
     validation_size = 10000
 
@@ -47,8 +47,8 @@ if __name__ == "__main__":
         winners[:-validation_size],
         batch_size=32,
         validation_data=(positions[-validation_size:], winners[-validation_size:]),
-        epochs=2,
+        epochs=5,
         shuffle=True
     )
 
-    model.save_weights('my_model.h5')
+    model.save_weights('my_model2.h5')

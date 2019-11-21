@@ -7,8 +7,9 @@ import itertools
 from board import Board
 from keras_model4 import model
 from random import randint
+from utils import player_index
 
-model.load_weights('my_model.h5')
+model.load_weights('my_model2.h5')
 
 board_size = 5
 
@@ -42,7 +43,7 @@ class GameMaker:
         return self.board.winner is not None
 
     def game(self):
-        return self.moves_played, self.board.winner
+        return self.moves_played, player_index[self.board.winner]
 
     def refresh(self):
         self.board.refresh()
@@ -80,7 +81,7 @@ class GameMaker:
         self.valid_moves[move_index] = self.valid_moves[-1]
         del self.valid_moves[-1]
         self.moves_played.append((a, b))
-        #print(self.board)
+        print(self.board)
 
     def update(self, win_probs):
         best_move_index = max(range(len(self.valid_moves)),
@@ -89,9 +90,10 @@ class GameMaker:
 
 
 board_size = 5
-batch_size = 5  # number of games to create simultaneously
-games_required = 10000
-game_makers = [GameMaker(board_size, 4) for _ in range(batch_size)]
+batch_size = 1  # number of games to create simultaneously
+games_required = 1
+num_initial_moves = 4
+game_makers = [GameMaker(board_size, num_initial_moves) for _ in range(batch_size)]
 games = []
 
 while len(games) < games_required:
@@ -133,8 +135,7 @@ def add_training_data(moves, winner, positions_array, winners_array):
         positions_array[i] = temp_positions[(i % 2, False)]
         positions_array[i + len(moves)] = temp_positions[(i % 2, True)]
         winners_array[i] = winner == i % 2
-        winners_array[i + len(moves)] = winner == i % 2
-
+        winners_array[i + len(moves)] = winners_array[i]
 
 total_moves = sum(len(moves) for moves, winner in games)
 
@@ -158,7 +159,7 @@ while games:
 #     print(positions_array[i, :, :, 1])
 #     print("------------------------------")
 
-np.savez("training_data5.npz",
-         positions=positions_array,
-         winners=winners_array)
+# np.savez("training_data5.npz",
+#          positions=positions_array,
+#          winners=winners_array)
 

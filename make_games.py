@@ -1,6 +1,6 @@
 from board import Board
 import numpy as np
-from utils import rb, player_sign
+from utils import rb, player_index
 from random import randint
 
 board_size = 5
@@ -55,7 +55,7 @@ for i in range(num_games):
         positions[i, row + 1, column + 1, 0] = 1
     for row, column in blue_moves:
         positions[i, row + 1, column + 1, 1] = 1
-    winners[i] = (player_sign[winner] + 1) / 2
+    winners[i] = player_index[winner]
     #winners[i] = randint(0, 1)
 
 np.savez("training_data.npz", positions=positions, winners=winners)

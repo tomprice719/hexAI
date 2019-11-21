@@ -1,6 +1,6 @@
 from board import Board
 import numpy as np
-from utils import rb, player_sign, neighbour_difference, opposite_player
+from utils import rb, player_index, neighbour_difference, opposite_player
 import matplotlib.pyplot as plt
 
 board_size = 5
