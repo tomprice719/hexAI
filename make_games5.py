@@ -5,11 +5,8 @@ import numpy as np
 from utils import rb, player_index
 import itertools
 from board import Board
-from keras_model4 import model
 from random import randint
 import time
-
-model.load_weights('my_model2.h5')
 
 board_size = 5
 
@@ -152,7 +149,7 @@ def add_training_data(moves, winner, positions_array, winners_array):
 
 
 def make_training_data(model, games_required, num_initial_moves):
-    games = make_games(model, games_required, num_initial_moves)
+    games = make_games(model, model, games_required, num_initial_moves)
     total_moves = sum(len(moves) for moves, winner in games)
 
     positions_array = np.zeros((total_moves * 2, board_size + 1, board_size + 1, 2), dtype="float32")

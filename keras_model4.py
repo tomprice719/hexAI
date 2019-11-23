@@ -5,35 +5,34 @@ from keras.models import Model
 from keras.optimizers import Adam
 from keras.losses import BinaryCrossentropy
 from keras.metrics import BinaryAccuracy
-from functools import partial
 import numpy as np
 
-depth = 5
-breadth = 40
+def create_model(depth = 5, breadth = 40):
+    input_tensor = Input(shape=(6, 6, 2))
+    out_components = []
+    current_layer = input_tensor
 
-input_tensor = Input(shape=(6, 6, 2))
-out_components = []
-current_layer = input_tensor
+    for i in range(depth):
+        current_layer = Conv2D(breadth, 3, padding="same", activation="relu")(current_layer)
+        out_components.append(Dense(1, kernel_initializer="zeros")
+                              (GlobalAveragePooling2D()
+                               (current_layer)))
 
-for i in range(depth):
-    current_layer = Conv2D(breadth, 3, padding="same", activation="relu")(current_layer)
-    out_components.append(Dense(1, kernel_initializer="zeros")
-                          (GlobalAveragePooling2D()
-                           (current_layer)))
+    output_tensor = Add()(out_components)
 
-output_tensor = Add()(out_components)
+    model = Model([input_tensor], [output_tensor])
 
-model = Model([input_tensor], [output_tensor])
+    optimizer = Adam(lr=0.001)
 
-optimizer = Adam(lr=0.001)
-
-model.compile(
-    loss=BinaryCrossentropy(from_logits=True),
-    optimizer=optimizer,
-    metrics=[BinaryAccuracy(threshold=0.0)]
-)
+    model.compile(
+        loss=BinaryCrossentropy(from_logits=True),
+        optimizer=optimizer,
+        metrics=[BinaryAccuracy(threshold=0.0)]
+    )
+    return model
 
 if __name__ == "__main__":
+    model = create_model()
     data = np.load("training_data5.npz")
     positions = data["positions"]
     winners = data["winners"]
