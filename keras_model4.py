@@ -8,8 +8,8 @@ from keras.metrics import BinaryAccuracy
 from functools import partial
 import numpy as np
 
-depth = 8
-breadth = 80
+depth = 5
+breadth = 40
 
 input_tensor = Input(shape=(6, 6, 2))
 out_components = []

@@ -2,18 +2,18 @@
 # TODO: make GameMaker class, load model
 
 import numpy as np
-from utils import rb
+from utils import rb, player_index
 import itertools
 from board import Board
 from keras_model4 import model
 from random import randint
-from utils import player_index
+import time
 
 model.load_weights('my_model2.h5')
 
 board_size = 5
 
-initial_position = np.zeros((board_size + 1, board_size + 1, 2))
+initial_position = np.zeros((board_size + 1, board_size + 1, 2), dtype="float32")
 
 initial_position[1:, 0, 0] = 1
 initial_position[0, 1:, 1] = 1
@@ -37,6 +37,8 @@ class GameMaker:
         return self.positions[(player_perspective, flipped)]
 
     def num_positions_required(self):
+        if self.finished():
+            return 0
         return 2 * len(self.valid_moves)
 
     def finished(self):
@@ -56,6 +58,8 @@ class GameMaker:
             self._play_move(randint(0, len(self.valid_moves) - 1))
 
     def fill_positions(self, position_array):
+        if self.finished():
+            return
         position_array[:len(self.valid_moves)] = self._get_position(self.current_player, False)
         position_array[len(self.valid_moves):] = self._get_position(self.current_player, True)
 
@@ -81,43 +85,52 @@ class GameMaker:
         self.valid_moves[move_index] = self.valid_moves[-1]
         del self.valid_moves[-1]
         self.moves_played.append((a, b))
-        print(self.board)
+        # print(self.board)
 
     def update(self, win_probs):
+        if self.finished():
+            return
         best_move_index = max(range(len(self.valid_moves)),
                               key=lambda x: win_probs[x] + win_probs[x + len(self.valid_moves)])
         self._play_move(best_move_index)
 
 
-board_size = 5
-batch_size = 1  # number of games to create simultaneously
-games_required = 1
-num_initial_moves = 4
-game_makers = [GameMaker(board_size, num_initial_moves) for _ in range(batch_size)]
-games = []
+def make_games(red_model, blue_model, games_required, num_initial_moves, batch_size=5):
+    game_makers = [GameMaker(board_size, num_initial_moves) for _ in range(batch_size)]
+    games = []
+    start_time = time.time()
 
-while len(games) < games_required:
+    while game_makers:
 
-    [g.refresh() for g in game_makers if g.finished()]
+        for model in [red_model, blue_model]:
+            positions = np.zeros(
+                [sum(g.num_positions_required() for g in game_makers), board_size + 1, board_size + 1, 2],
+                dtype="float32")
 
-    positions = np.zeros([sum(g.num_positions_required() for g in game_makers), board_size + 1, board_size + 1, 2])
+            position_counter = 0
 
-    position_counter = 0
-    for g in game_makers:
-        g.fill_positions(positions[position_counter: position_counter + g.num_positions_required()])
-        position_counter += g.num_positions_required()
+            for g in game_makers:
+                g.fill_positions(positions[position_counter: position_counter + g.num_positions_required()])
+                position_counter += g.num_positions_required()
 
-    win_probs = model.predict(positions)
+            win_probs = model.predict(positions)
 
-    position_counter = 0
-    for g in game_makers:
-        g.update(win_probs[position_counter: position_counter + g.num_positions_required()])
-        position_counter += g.num_positions_required()
+            position_counter = 0
+            for g in game_makers:
+                g.update(win_probs[position_counter: position_counter + g.num_positions_required()])
+                position_counter += g.num_positions_required()
 
-    new_games = [g.game() for g in game_makers if g.finished()]
-    if (len(games) + len(new_games)) // 100 > len(games) // 100:
-        print(len(games) + len(new_games))
-    games += new_games
+        new_games = [g.game() for g in game_makers if g.finished()]
+        if (len(games) + len(new_games)) // 100 > len(games) // 100:
+            print(time.time() - start_time, len(games) + len(new_games))
+        games += new_games
+
+        if len(games) > games_required:
+            game_makers = [g for g in game_makers if not g.finished()]
+        else:
+            [g.refresh() for g in game_makers if g.finished()]
+
+    return games
 
 
 def add_training_data(moves, winner, positions_array, winners_array):
@@ -137,22 +150,26 @@ def add_training_data(moves, winner, positions_array, winners_array):
         winners_array[i] = winner == i % 2
         winners_array[i + len(moves)] = winners_array[i]
 
-total_moves = sum(len(moves) for moves, winner in games)
 
-positions_array = np.zeros((total_moves * 2, board_size + 1, board_size + 1, 2))
-winners_array = np.zeros(total_moves * 2)
+def make_training_data(model, games_required, num_initial_moves):
+    games = make_games(model, games_required, num_initial_moves)
+    total_moves = sum(len(moves) for moves, winner in games)
 
-total_moves_counter = 0
+    positions_array = np.zeros((total_moves * 2, board_size + 1, board_size + 1, 2), dtype="float32")
+    winners_array = np.zeros(total_moves * 2, dtype="float32")
 
-while games:
-    if len(games) % 1000 == 0:
-        print(len(games), "more games to process.")
-    moves, winner = games.pop()
-    add_training_data(moves, winner,
-                      positions_array[total_moves_counter: total_moves_counter + 2 * len(moves)],
-                      winners_array[total_moves_counter: total_moves_counter + 2 * len(moves)])
-    # total_moves_counter += len(moves)
-    total_moves_counter += 2 * len(moves)
+    total_moves_counter = 0
+
+    while games:
+        if len(games) % 1000 == 0:
+            print(len(games), "more games to process.")
+        moves, winner = games.pop()
+        add_training_data(moves, winner,
+                          positions_array[total_moves_counter: total_moves_counter + 2 * len(moves)],
+                          winners_array[total_moves_counter: total_moves_counter + 2 * len(moves)])
+        # total_moves_counter += len(moves)
+        total_moves_counter += 2 * len(moves)
+    return positions_array, winners_array
 
 # for i in range(total_moves * 2):
 #     print(positions_array[i, :, :, 0])
@@ -162,4 +179,3 @@ while games:
 # np.savez("training_data5.npz",
 #          positions=positions_array,
 #          winners=winners_array)
-
