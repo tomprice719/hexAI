@@ -92,7 +92,7 @@ class GameMaker:
         self._play_move(best_move_index)
 
 
-def make_games(red_model, blue_model, games_required, num_initial_moves, batch_size=5):
+def make_games(red_model, blue_model, games_required, num_initial_moves, batch_size=3):
     game_makers = [GameMaker(board_size, num_initial_moves) for _ in range(batch_size)]
     games = []
     start_time = time.time()
@@ -148,7 +148,7 @@ def add_training_data(moves, winner, positions_array, winners_array):
         winners_array[i + len(moves)] = winners_array[i]
 
 
-def make_training_data(model, games_required, num_initial_moves):
+def make_training_data(model, games_required, num_initial_moves, save_filename = None):
     games = make_games(model, model, games_required, num_initial_moves)
     total_moves = sum(len(moves) for moves, winner in games)
 
@@ -166,6 +166,12 @@ def make_training_data(model, games_required, num_initial_moves):
                           winners_array[total_moves_counter: total_moves_counter + 2 * len(moves)])
         # total_moves_counter += len(moves)
         total_moves_counter += 2 * len(moves)
+
+    if save_filename is not None:
+        np.savez("../data/%s" % save_filename,
+                 positions=positions_array,
+                 winners=winners_array)
+
     return positions_array, winners_array
 
 # for i in range(total_moves * 2):

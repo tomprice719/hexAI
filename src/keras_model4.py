@@ -22,7 +22,7 @@ def create_model(depth = 5, breadth = 40):
 
     model = Model([input_tensor], [output_tensor])
 
-    optimizer = Adam(lr=0.001)
+    optimizer = Adam(lr=0.0001)
 
     model.compile(
         loss=BinaryCrossentropy(from_logits=True),
