@@ -65,7 +65,7 @@ class GameMaker:
             if self.current_player == 1:
                 a, b = b, a
             position_array[i, a + 1, b + 1, 0] = 1
-            position_array[i, self.board.board_size - a, self.board.board_size - b, 0] = 1
+            position_array[i + len(self.valid_moves), self.board.board_size - a, self.board.board_size - b, 0] = 1
 
     def _play_move(self, move_index):
         """Plays a move on the board, where the move is specified by its index in valid_moves"""
@@ -97,9 +97,14 @@ def make_games(red_model, blue_model, games_required, num_initial_moves, batch_s
     games = []
     start_time = time.time()
 
+    if num_initial_moves % 2 == 0:
+        models = [red_model, blue_model]
+    else:
+        models = [blue_model, red_model]
+
     while game_makers:
 
-        for model in [red_model, blue_model]:
+        for model in models:
             positions = np.zeros(
                 [sum(g.num_positions_required() for g in game_makers), board_size + 1, board_size + 1, 2],
                 dtype="float32")
