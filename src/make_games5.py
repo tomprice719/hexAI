@@ -146,8 +146,8 @@ class GameMaker:
         raise Exception("Unrecognized game phase.")
 
 
-def make_games(red_model, blue_model, games_required, num_initial_moves, batch_size=3):
-    game_makers = [GameMaker(board_size, num_initial_moves) for _ in range(batch_size)]
+def make_games(red_model, blue_model, games_required, num_initial_moves, batch_size=3, allow_swap = True):
+    game_makers = [GameMaker(board_size, num_initial_moves, allow_swap) for _ in range(batch_size)]
     games = []
     start_time = time.time()
 
@@ -215,7 +215,7 @@ def add_training_data(moves, winner, num_initial_moves, positions_array, winners
 
 
 def make_training_data(model, games_required, num_initial_moves, save_filename=None):
-    games = make_games(model, model, games_required, num_initial_moves)
+    games = make_games(model, model, games_required, num_initial_moves, allow_swap = False)
     total_moves = sum(len(moves[num_initial_moves + 1:]) for moves, winner in games)
 
     positions_array = np.zeros((total_moves * 2, board_size + 1, board_size + 1, 2), dtype="float32")
