@@ -14,19 +14,20 @@ board_size = 5
 
 
 def compare_models(model1, model2, half_num_games, num_initial_moves):
-    red_wins = [winner for game, winner in
+    red_wins = [(winner + swapped) % 2 for game, winner, swapped in
                 make_games(model1, model2, half_num_games, num_initial_moves)].count(0) + \
-               [winner for game, winner in
+               [(winner + swapped) % 2 for game, winner, swapped in
                 make_games(model2, model1, half_num_games, num_initial_moves)].count(1)
     return red_wins / (half_num_games * 2)
 
 
 def show_game(red_model, blue_model, num_initial_moves):
-    moves, winner = make_games(red_model, blue_model, 1, num_initial_moves, batch_size=1)[0]
+    moves, winner, swapped = make_games(red_model, blue_model, 1, num_initial_moves, batch_size=1)[0]
     b = Board(board_size)
     for i, move in enumerate(moves):
         b.update(rb[i % 2], b.point_to_index(move))
         print(b)
+    print("winner:", winner, "swapped:", swapped)
 
 
 def train_from_selfplay(model, epoch_size, new_games_per_epoch, num_iterations, training_data):
@@ -48,13 +49,13 @@ def train_from_selfplay(model, epoch_size, new_games_per_epoch, num_iterations, 
             batch_size=64,
             epochs=1,
             shuffle=True,
-            verbose = 0
+            verbose=0
         )
 
     return positions, winners
 
-def train_from_selfplay2(model, epoch_size, new_games_per_epoch, num_iterations):
 
+def train_from_selfplay2(model, epoch_size, new_games_per_epoch, num_iterations):
     for i in range(num_iterations):
         if i % 100 == 0:
             print(i)
@@ -66,7 +67,7 @@ def train_from_selfplay2(model, epoch_size, new_games_per_epoch, num_iterations)
             batch_size=64,
             epochs=1,
             shuffle=True,
-            verbose = 0
+            verbose=0
         )
 
 
