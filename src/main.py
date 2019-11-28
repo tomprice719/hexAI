@@ -12,8 +12,9 @@ model2.load_weights('../data/my_model2.h5')
 
 board_size = 5
 
+num_initial_moves = 3
 
-def compare_models(model1, model2, half_num_games, num_initial_moves):
+def compare_models(model1, model2, half_num_games):
     red_wins = [(winner + swapped) % 2 for game, winner, swapped in
                 make_games(model1, model2, half_num_games, num_initial_moves)].count(0) + \
                [(winner + swapped) % 2 for game, winner, swapped in
@@ -21,7 +22,7 @@ def compare_models(model1, model2, half_num_games, num_initial_moves):
     return red_wins / (half_num_games * 2)
 
 
-def show_game(red_model, blue_model, num_initial_moves):
+def show_game(red_model, blue_model):
     moves, winner, swapped = make_games(red_model, blue_model, 1, num_initial_moves, batch_size=1)[0]
     b = Board(board_size)
     for i, move in enumerate(moves):
@@ -34,12 +35,12 @@ def train_from_selfplay(model, epoch_size, new_games_per_epoch, num_iterations, 
     if training_data is not None:
         positions, winners = training_data
     else:
-        positions, winners = make_training_data(model, 0, 4)
+        positions, winners = make_training_data(model, 0, num_initial_moves)
 
     for i in range(num_iterations):
         if i % 100 == 0:
             print(i)
-        new_positions, new_winners = make_training_data(model, new_games_per_epoch, 4)
+        new_positions, new_winners = make_training_data(model, new_games_per_epoch, num_initial_moves)
         positions = np.append(new_positions, positions, axis=0)[:epoch_size]
         winners = np.append(new_winners, winners, axis=0)[:epoch_size]
 
@@ -59,7 +60,7 @@ def train_from_selfplay2(model, new_games_per_epoch, num_iterations):
     for i in range(num_iterations):
         if i % 10 == 0:
             print(i)
-        positions, winners = make_training_data(model, new_games_per_epoch, 4)
+        positions, winners = make_training_data(model, new_games_per_epoch, num_initial_moves)
 
         model.fit(
             positions,
@@ -97,11 +98,11 @@ def train_from_file(model, filename, num_epochs, cutoff=None):
 # print("finished initializing model")
 
 while (True):
-    train_from_selfplay2(model2, 10, 100)
+    train_from_selfplay2(model2, 10, 300)
     model2.save_weights('../data/my_model6.h5')
-    show_game(model2, model2, 4)
-    print("WIN RATIO", compare_models(model2, model2, 100, 4))
-    print("WIN RATIO", compare_models(model2, model1, 500, 4))
+    show_game(model2, model2)
+    print("WIN RATIO", compare_models(model2, model2, 100))
+    print("WIN RATIO", compare_models(model2, model1, 500))
 
 # model2.save_weights('../data/my_model3.h5')
 # print(compare_models(model1, model2, 10000, 4))
