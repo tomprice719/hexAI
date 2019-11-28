@@ -199,10 +199,10 @@ def add_training_data(moves, winner, num_initial_moves, positions_array, winners
     temp_positions = dict(((player_perspective, flipped), np.copy(initial_position))
                           for player_perspective, flipped in itertools.product((0, 1), (False, True)))
 
-    positions_array1 = positions_array[:len(moves[num_initial_moves + 1:])]
-    positions_array_2 = positions_array[len(moves[num_initial_moves + 1:]):]
-    winners_array_1 = winners_array[:len(moves[num_initial_moves + 1:])]
-    winners_array_2 = winners_array[len(moves[num_initial_moves + 1:]):]
+    positions_array1 = positions_array[:len(moves[num_initial_moves:])]
+    positions_array_2 = positions_array[len(moves[num_initial_moves:]):]
+    winners_array_1 = winners_array[:len(moves[num_initial_moves :])]
+    winners_array_2 = winners_array[len(moves[num_initial_moves:]):]
 
     for i, move in enumerate(moves):
         a, b = move
@@ -212,7 +212,7 @@ def add_training_data(moves, winner, num_initial_moves, positions_array, winners
             temp_positions[(player_perspective, flipped)][a2, b2, (i + player_perspective) % 2] = 1
 
         # update training data, possibly swapping colours so that current player is always red
-        j = i - (num_initial_moves + 1)
+        j = i - num_initial_moves
         if j >= 0:
             positions_array1[j] = temp_positions[(i % 2, False)]
             positions_array_2[j] = temp_positions[(i % 2, True)]
@@ -222,7 +222,7 @@ def add_training_data(moves, winner, num_initial_moves, positions_array, winners
 
 def make_training_data(model, games_required, num_initial_moves, save_filename=None):
     games = make_games(model, model, games_required, num_initial_moves, allow_swap = False)
-    total_moves = sum(len(moves[num_initial_moves + 1:]) for moves, winner, swapped in games)
+    total_moves = sum(len(moves[num_initial_moves:]) for moves, winner, swapped in games)
 
     positions_array = np.zeros((total_moves * 2, board_size + 1, board_size + 1, 2), dtype="float32")
     winners_array = np.zeros(total_moves * 2, dtype="float32")
@@ -233,7 +233,7 @@ def make_training_data(model, games_required, num_initial_moves, save_filename=N
         if len(games) % 1000 == 0:
             print(len(games), "more games to process.")
         moves, winner, swapped = games.pop()
-        counter_diff = 2 * len(moves[num_initial_moves + 1:])
+        counter_diff = 2 * len(moves[num_initial_moves:])
         add_training_data(moves, winner, num_initial_moves,
                           positions_array[total_moves_counter: total_moves_counter + counter_diff],
                           winners_array[total_moves_counter: total_moves_counter + counter_diff])
