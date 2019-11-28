@@ -82,6 +82,7 @@ class GameMaker:
                     a, b = b, a
                 position_array[i, a + 1, b + 1, 0] = 1
                 position_array[i + len(self.valid_moves), self.board.board_size - a, self.board.board_size - b, 0] = 1
+            return
         if self.game_phase == GamePhase.MAY_SWAP:
             position_array[:len(self.valid_moves)] = self._get_position(self.current_player, False)
             position_array[len(self.valid_moves) + 1: -1] = self._get_position(self.current_player, True)
@@ -96,6 +97,7 @@ class GameMaker:
                 position_array[i + len(self.valid_moves) + 1,
                                self.board.board_size - a,
                                self.board.board_size - b, 0] = 1
+            return
         if self.game_phase == GamePhase.FINISHED:
             return
         raise Exception("Unrecognized game phase.")
@@ -115,8 +117,6 @@ class GameMaker:
         self.valid_moves[move_index] = self.valid_moves[-1]
         del self.valid_moves[-1]
         self.moves_played.append((a, b))
-        if self.board.winner is not None:
-            self.game_phase = GamePhase.FINISHED
         # print(self.board)
 
     def update(self, win_logits):
@@ -128,6 +128,7 @@ class GameMaker:
                 self.game_phase = GamePhase.MAY_SWAP
             else:
                 self.game_phase = GamePhase.AFTER_SWAP
+            return
         if self.game_phase == GamePhase.MAY_SWAP:
             best_move_index = max(range(len(self.valid_moves) + 1),
                                   key=lambda x: win_logits[x] + win_logits[x + len(self.valid_moves) + 1])
@@ -136,10 +137,15 @@ class GameMaker:
                 self.swapped = 0
             else:
                 self.swapped = 1
+            self.game_phase = GamePhase.AFTER_SWAP
+            return
         if self.game_phase == GamePhase.AFTER_SWAP:
             best_move_index = max(range(len(self.valid_moves)),
                                   key=lambda x: win_logits[x] + win_logits[x + len(self.valid_moves)])
             self._play_move(best_move_index)
+            if self.board.winner is not None:
+                self.game_phase = GamePhase.FINISHED
+            return
         if self.game_phase == GamePhase.FINISHED:
             return
 
@@ -211,12 +217,12 @@ def add_training_data(moves, winner, num_initial_moves, positions_array, winners
             positions_array1[j] = temp_positions[(i % 2, False)]
             positions_array_2[j] = temp_positions[(i % 2, True)]
             winners_array_1[j] = winner == i % 2
-            winners_array_2[j] = winners_array[i]
+            winners_array_2[j] = winners_array[j]
 
 
 def make_training_data(model, games_required, num_initial_moves, save_filename=None):
     games = make_games(model, model, games_required, num_initial_moves, allow_swap = False)
-    total_moves = sum(len(moves[num_initial_moves + 1:]) for moves, winner in games)
+    total_moves = sum(len(moves[num_initial_moves + 1:]) for moves, winner, swapped in games)
 
     positions_array = np.zeros((total_moves * 2, board_size + 1, board_size + 1, 2), dtype="float32")
     winners_array = np.zeros(total_moves * 2, dtype="float32")

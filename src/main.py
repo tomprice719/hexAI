@@ -7,8 +7,8 @@ from keras_model4 import create_model
 model1 = create_model()
 model1.load_weights('../data/my_model2.h5')
 
-model2 = create_model(10, 40)
-model2.load_weights('../data/my_model5.h5')
+model2 = create_model(5, 40)
+model2.load_weights('../data/my_model2.h5')
 
 board_size = 5
 
@@ -55,9 +55,9 @@ def train_from_selfplay(model, epoch_size, new_games_per_epoch, num_iterations, 
     return positions, winners
 
 
-def train_from_selfplay2(model, epoch_size, new_games_per_epoch, num_iterations):
+def train_from_selfplay2(model, new_games_per_epoch, num_iterations):
     for i in range(num_iterations):
-        if i % 100 == 0:
+        if i % 10 == 0:
             print(i)
         positions, winners = make_training_data(model, new_games_per_epoch, 4)
 
@@ -97,8 +97,10 @@ def train_from_file(model, filename, num_epochs, cutoff=None):
 # print("finished initializing model")
 
 while (True):
-    train_from_selfplay2(model2, 400, 10, 1000)
-    model2.save_weights('../data/my_model5.h5')
+    train_from_selfplay2(model2, 10, 100)
+    model2.save_weights('../data/my_model6.h5')
+    show_game(model2, model2, 4)
+    print("WIN RATIO", compare_models(model2, model2, 100, 4))
     print("WIN RATIO", compare_models(model2, model1, 500, 4))
 
 # model2.save_weights('../data/my_model3.h5')
