@@ -40,18 +40,16 @@ class GameMaker:
             self._play_move(randint(0, len(self.valid_moves) - 1))
         self.game_phase = GamePhase.BEFORE_SWAP
         self.swapped = None
+        self.noswap_threshold = None
 
     def _get_position(self, player_perspective, flipped):
         return self.positions[(player_perspective, flipped)]
 
     def num_positions_required(self):
-        if self.game_phase == GamePhase.BEFORE_SWAP or self.game_phase == GamePhase.AFTER_SWAP:
-            return 2 * len(self.valid_moves)
-        if self.game_phase == GamePhase.MAY_SWAP:
-            return 2 * len(self.valid_moves) + 2
         if self.game_phase == GamePhase.FINISHED:
             return 0
-        raise Exception("Unrecognized game phase.")
+        else:
+            return 2 * len(self.valid_moves)
 
     def finished(self):
         return self.board.winner is not None
@@ -70,9 +68,12 @@ class GameMaker:
             self._play_move(randint(0, len(self.valid_moves) - 1))
         self.game_phase = GamePhase.BEFORE_SWAP
         self.swapped = None
+        self.noswap_threshold = None
 
     def fill_positions(self, position_array):
-        if self.game_phase == GamePhase.BEFORE_SWAP or self.game_phase == GamePhase.AFTER_SWAP:
+        if self.game_phase == GamePhase.FINISHED:
+            return
+        else:
             position_array[:len(self.valid_moves)] = self._get_position(self.current_player, False)
             position_array[len(self.valid_moves):] = self._get_position(self.current_player, True)
 
@@ -83,24 +84,6 @@ class GameMaker:
                 position_array[i, a + 1, b + 1, 0] = 1
                 position_array[i + len(self.valid_moves), self.board.board_size - a, self.board.board_size - b, 0] = 1
             return
-        if self.game_phase == GamePhase.MAY_SWAP:
-            position_array[:len(self.valid_moves)] = self._get_position(self.current_player, False)
-            position_array[len(self.valid_moves) + 1: -1] = self._get_position(self.current_player, True)
-            position_array[len(self.valid_moves)] = self._get_position(1 - self.current_player, False)
-            position_array[-1] = self._get_position(1 - self.current_player, True)
-
-            for i, move in enumerate(self.valid_moves):
-                a, b = self.board.index_to_point(move)
-                if self.current_player == 1:
-                    a, b = b, a
-                position_array[i, a + 1, b + 1, 0] = 1
-                position_array[i + len(self.valid_moves) + 1,
-                               self.board.board_size - a,
-                               self.board.board_size - b, 0] = 1
-            return
-        if self.game_phase == GamePhase.FINISHED:
-            return
-        raise Exception("Unrecognized game phase.")
 
     def _play_move(self, move_index):
         """Plays a move on the board, where the move is specified by its index in valid_moves"""
@@ -121,18 +104,20 @@ class GameMaker:
 
     def update(self, win_logits):
         if self.game_phase == GamePhase.BEFORE_SWAP:
-            best_move_index = min(range(len(self.valid_moves)),
+            medium_move_index = min(range(len(self.valid_moves)),
                                   key=lambda x: abs(win_logits[x] + win_logits[x + len(self.valid_moves)]))
-            self._play_move(best_move_index)
+            self.noswap_theshold = win_logits[medium_move_index] + win_logits[medium_move_index + len(self.valid_moves)]
+            self._play_move(medium_move_index)
             if self.allow_swap:
                 self.game_phase = GamePhase.MAY_SWAP
             else:
                 self.game_phase = GamePhase.AFTER_SWAP
             return
         if self.game_phase == GamePhase.MAY_SWAP:
-            best_move_index = max(range(len(self.valid_moves) + 1),
-                                  key=lambda x: win_logits[x] + win_logits[x + len(self.valid_moves) + 1])
-            if best_move_index < len(self.valid_moves):
+            best_move_index = max(range(len(self.valid_moves)),
+                                  key=lambda x: win_logits[x] + win_logits[x + len(self.valid_moves)])
+            best_move_logits = win_logits[best_move_index] + win_logits[best_move_index + len(self.valid_moves)]
+            if best_move_logits > self.noswap_threshold:
                 self._play_move(best_move_index)
                 self.swapped = 0
             else:

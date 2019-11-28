@@ -12,7 +12,7 @@ model2.load_weights('../data/my_model2.h5')
 
 board_size = 5
 
-num_initial_moves = 3
+num_initial_moves = 2
 
 def compare_models(model1, model2, half_num_games):
     red_wins = [(winner + swapped) % 2 for game, winner, swapped in
