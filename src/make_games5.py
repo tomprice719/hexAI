@@ -8,6 +8,10 @@ from board import Board
 from random import randint
 import time
 from enum import Enum
+import math
+
+def sigmoid(x):
+  return 1 / (1 + math.exp(-x))
 
 board_size = 5
 
@@ -85,7 +89,7 @@ class GameMaker:
                 position_array[i + len(self.valid_moves), self.board.board_size - a, self.board.board_size - b, 0] = 1
             return
 
-    def _play_move(self, move_index):
+    def _play_move(self, move_index, annotation = None):
         """Plays a move on the board, where the move is specified by its index in valid_moves"""
         move = self.valid_moves[move_index]
         a, b = self.board.index_to_point(move)
@@ -99,15 +103,16 @@ class GameMaker:
         self.current_player = 1 - self.current_player
         self.valid_moves[move_index] = self.valid_moves[-1]
         del self.valid_moves[-1]
-        self.moves_played.append((a, b))
+        self.moves_played.append(((a, b), annotation))
         # print(self.board)
 
-    def update(self, win_logits):
+    def update(self, win_logits, model_label):
         if self.game_phase == GamePhase.BEFORE_SWAP:
             medium_move_index = min(range(len(self.valid_moves)),
                                   key=lambda x: abs(win_logits[x] + win_logits[x + len(self.valid_moves)]))
-            self.noswap_theshold = win_logits[medium_move_index] + win_logits[medium_move_index + len(self.valid_moves)]
-            self._play_move(medium_move_index)
+            self.noswap_threshold = float(win_logits[medium_move_index]
+                                          + win_logits[medium_move_index + len(self.valid_moves)])
+            self._play_move(medium_move_index, (model_label, self.noswap_threshold, sigmoid(self.noswap_threshold)))
             if self.allow_swap:
                 self.game_phase = GamePhase.MAY_SWAP
             else:
@@ -116,9 +121,10 @@ class GameMaker:
         if self.game_phase == GamePhase.MAY_SWAP:
             best_move_index = max(range(len(self.valid_moves)),
                                   key=lambda x: win_logits[x] + win_logits[x + len(self.valid_moves)])
-            best_move_logits = win_logits[best_move_index] + win_logits[best_move_index + len(self.valid_moves)]
+            best_move_logits = float(win_logits[best_move_index]
+                                     + win_logits[best_move_index + len(self.valid_moves)])
             if best_move_logits > self.noswap_threshold:
-                self._play_move(best_move_index)
+                self._play_move(best_move_index, (model_label, best_move_logits, sigmoid(best_move_logits)))
                 self.swapped = 0
             else:
                 self.swapped = 1
@@ -127,7 +133,9 @@ class GameMaker:
         if self.game_phase == GamePhase.AFTER_SWAP:
             best_move_index = max(range(len(self.valid_moves)),
                                   key=lambda x: win_logits[x] + win_logits[x + len(self.valid_moves)])
-            self._play_move(best_move_index)
+            best_move_logits = float(win_logits[best_move_index]
+                                     + win_logits[best_move_index + len(self.valid_moves)])
+            self._play_move(best_move_index, (model_label, best_move_logits, sigmoid(best_move_logits)))
             if self.board.winner is not None:
                 self.game_phase = GamePhase.FINISHED
             return
@@ -137,19 +145,19 @@ class GameMaker:
         raise Exception("Unrecognized game phase.")
 
 
-def make_games(red_model, blue_model, games_required, num_initial_moves, batch_size=3, allow_swap = True):
+def make_games(modelA, modelB, games_required, num_initial_moves, batch_size=3, allow_swap = True):
     game_makers = [GameMaker(board_size, num_initial_moves, allow_swap) for _ in range(batch_size)]
     games = []
     start_time = time.time()
 
     if num_initial_moves % 2 == 0:
-        models = [red_model, blue_model]
+        models = [(modelA, "A"), (modelB, "B")]
     else:
-        models = [blue_model, red_model]
+        models = [(modelB, "B"), (modelA, "A")]
 
     while game_makers:
 
-        for model in models:
+        for model, label in models:
             positions = np.zeros(
                 [sum(g.num_positions_required() for g in game_makers), board_size + 1, board_size + 1, 2],
                 dtype="float32")
@@ -164,7 +172,7 @@ def make_games(red_model, blue_model, games_required, num_initial_moves, batch_s
 
             position_counter = 0
             for g in game_makers:
-                g.update(win_logits[position_counter: position_counter + g.num_positions_required()])
+                g.update(win_logits[position_counter: position_counter + g.num_positions_required()], label)
                 position_counter += g.num_positions_required()
 
         new_games = [g.game() for g in game_makers if g.finished()]
@@ -189,7 +197,7 @@ def add_training_data(moves, winner, num_initial_moves, positions_array, winners
     winners_array_1 = winners_array[:len(moves[num_initial_moves :])]
     winners_array_2 = winners_array[len(moves[num_initial_moves:]):]
 
-    for i, move in enumerate(moves):
+    for i, (move, annotation) in enumerate(moves):
         a, b = move
         for player_perspective, flipped in itertools.product((0, 1), (False, True)):
             a1, b1 = (a, b) if player_perspective == 0 else (b, a)

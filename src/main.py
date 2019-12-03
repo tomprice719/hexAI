@@ -25,10 +25,13 @@ def compare_models(model1, model2, half_num_games):
 def show_game(red_model, blue_model):
     moves, winner, swapped = make_games(red_model, blue_model, 1, num_initial_moves, batch_size=1)[0]
     b = Board(board_size)
-    for i, move in enumerate(moves):
+    for i, (move, annotation) in enumerate(moves):
         b.update(rb[i % 2], b.point_to_index(move))
         print(b)
+        print(annotation)
+        print("-------------------------------------")
     print("winner:", winner, "swapped:", swapped)
+    print()
 
 
 def train_from_selfplay(model, epoch_size, new_games_per_epoch, num_iterations, training_data):
@@ -99,7 +102,7 @@ def train_from_file(model, filename, num_epochs, cutoff=None):
 
 while (True):
     train_from_selfplay2(model2, 10, 300)
-    model2.save_weights('../data/my_model6.h5')
+    model2.save_weights('../data/my_model7.h5')
     show_game(model2, model2)
     print("WIN RATIO", compare_models(model2, model2, 100))
     print("WIN RATIO", compare_models(model2, model1, 500))

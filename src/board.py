@@ -158,5 +158,4 @@ class Board:
                         symbol = symbols[(player, new)]
                 rep += symbol
             rep += "\n"
-        rep += "---------------------------------------------------------------"
         return rep
