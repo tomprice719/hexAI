@@ -34,32 +34,32 @@ def show_game(red_model, blue_model):
     print()
 
 
-def train_from_selfplay(model, epoch_size, new_games_per_epoch, num_iterations, training_data):
-    if training_data is not None:
-        positions, winners = training_data
-    else:
-        positions, winners = make_training_data(model, 0, num_initial_moves)
+# def train_from_selfplay(model, epoch_size, new_games_per_epoch, num_iterations, training_data):
+#     if training_data is not None:
+#         positions, winners = training_data
+#     else:
+#         positions, winners = make_training_data(model, 0, num_initial_moves)
+#
+#     for i in range(num_iterations):
+#         if i % 100 == 0:
+#             print(i)
+#         new_positions, new_winners = make_training_data(model, new_games_per_epoch, num_initial_moves)
+#         positions = np.append(new_positions, positions, axis=0)[:epoch_size]
+#         winners = np.append(new_winners, winners, axis=0)[:epoch_size]
+#
+#         model.fit(
+#             positions,
+#             winners,
+#             batch_size=64,
+#             epochs=1,
+#             shuffle=True,
+#             verbose=0
+#         )
+#
+#     return positions, winners
 
-    for i in range(num_iterations):
-        if i % 100 == 0:
-            print(i)
-        new_positions, new_winners = make_training_data(model, new_games_per_epoch, num_initial_moves)
-        positions = np.append(new_positions, positions, axis=0)[:epoch_size]
-        winners = np.append(new_winners, winners, axis=0)[:epoch_size]
 
-        model.fit(
-            positions,
-            winners,
-            batch_size=64,
-            epochs=1,
-            shuffle=True,
-            verbose=0
-        )
-
-    return positions, winners
-
-
-def train_from_selfplay2(model, new_games_per_epoch, num_iterations):
+def train_from_selfplay(model, new_games_per_epoch, num_iterations):
     for i in range(num_iterations):
         if i % 10 == 0:
             print(i)
@@ -75,18 +75,12 @@ def train_from_selfplay2(model, new_games_per_epoch, num_iterations):
         )
 
 
-def train_from_file(model, filename, num_epochs, cutoff=None):
+def train_from_file(model, filename, num_epochs):
     data = np.load("../data/%s" % filename)
-    positions = data["positions"]
-    winners = data["winners"]
-
-    if cutoff is not None:
-        positions = positions[:cutoff]
-        winners = winners[:cutoff]
 
     model.fit(
-        positions,
-        winners,
+        data,
+        data,
         batch_size=64,
         epochs=num_epochs,
         shuffle=True,
@@ -101,7 +95,7 @@ def train_from_file(model, filename, num_epochs, cutoff=None):
 # print("finished initializing model")
 
 while (True):
-    train_from_selfplay2(model2, 10, 300)
+    train_from_selfplay(model2, 10, 300)
     model2.save_weights('../data/my_model7.h5')
     show_game(model2, model2)
     print("WIN RATIO", compare_models(model2, model2, 100))

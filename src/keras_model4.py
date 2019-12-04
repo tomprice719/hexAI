@@ -5,22 +5,27 @@ from keras.models import Model
 from keras.optimizers import Adam
 from keras.losses import BinaryCrossentropy
 from keras.metrics import BinaryAccuracy
-import numpy as np
+import itertools
+from utils import input_names
 
-def create_model(depth = 5, breadth = 40):
-    input_tensor = Input(shape=(6, 6, 2))
+
+def create_model(depth=5, breadth=40):
+    input_tensors = [Input(shape=(6, 6, 2), name=input_names[k]) for k in itertools.product((0, 1), (False, True))]
     out_components = []
-    current_layer = input_tensor
+    tensors = input_tensors
+    pool = GlobalAveragePooling2D()
 
     for i in range(depth):
-        current_layer = Conv2D(breadth, 3, padding="same", activation="relu")(current_layer)
-        out_components.append(Dense(1, kernel_initializer="zeros")
-                              (GlobalAveragePooling2D()
-                               (current_layer)))
+        conv_layer = Conv2D(breadth, 3, padding="same", activation="relu")
+        tensors = list(map(conv_layer, tensors))
+        dense_layer = Dense(1, kernel_initializer="zeros")
+        out_components += [dense_layer(pool(t)) for t in tensors[:2]]
+        dense_layer = Dense(1, kernel_initializer="zeros")
+        out_components += [dense_layer(pool(t)) for t in tensors[2:]]
 
     output_tensor = Add()(out_components)
 
-    model = Model([input_tensor], [output_tensor])
+    model = Model([input_tensors], [output_tensor])
 
     optimizer = Adam(lr=0.0001)
 
@@ -30,24 +35,3 @@ def create_model(depth = 5, breadth = 40):
         metrics=[BinaryAccuracy(threshold=0.0)]
     )
     return model
-
-if __name__ == "__main__":
-    model = create_model()
-    data = np.load("training_data5.npz")
-    positions = data["positions"]
-    winners = data["winners"]
-
-    print(winners[:100])
-
-    validation_size = 10000
-
-    model.fit(
-        positions[:-validation_size],
-        winners[:-validation_size],
-        batch_size=32,
-        validation_data=(positions[-validation_size:], winners[-validation_size:]),
-        epochs=5,
-        shuffle=True
-    )
-
-    model.save_weights('my_model2.h5')
