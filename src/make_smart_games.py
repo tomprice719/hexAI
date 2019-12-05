@@ -73,15 +73,16 @@ class GameMaker:
             return
         else:
             for player_perspective, flipped in itertools.product((0, 1), (False, True)):
-                positions[input_names[(player_perspective, flipped)]][slice_] = \
-                    self._get_position((self.current_player + player_perspective) % 2, flipped)
+                positions[input_names[((self.current_player + player_perspective) % 2, flipped)]][slice_] = \
+                    self._get_position(player_perspective, flipped)
 
             for i, move in enumerate(self.valid_moves):
                 a, b = self.board.index_to_point(move)
                 for player_perspective, flipped in itertools.product((0, 1), (False, True)):
                     a1, b1 = (a, b) if player_perspective == 0 else (b, a)
                     a2, b2 = (self.board.board_size - a1, self.board.board_size - b1) if flipped else (a1 + 1, b1 + 1)
-                    positions[input_names[(player_perspective, flipped)]][slice_][i, a2, b2, player_perspective] = 1
+                    positions[input_names[((self.current_player + player_perspective) % 2, flipped)]] \
+                        [slice_][i, a2, b2, (self.current_player + player_perspective) % 2] = 1
 
     def _play_move(self, move_index, annotation=None):
         """Plays a move on the board, where the move is specified by its index in valid_moves"""

@@ -13,10 +13,10 @@ player_index = {"red": 0, "blue": 1}
 
 neighbour_difference = [(-1, 0), (-1, 1), (0, 1), (1, 0), (1, -1), (0, -1)]
 
-input_names = {(0, False): "current player, no flip",
-               (0, True): "current player, 180 degree flip",
-               (1, False): "opposite player, no flip",
-               (1, True): "opposite player, 180 degree flip"}
+input_names = {(0, False): "current_player_no_flip",
+               (0, True): "current_player_180_flip",
+               (1, False): "opposite_player_no_flip",
+               (1, True): "opposite_player_180_flip"}
 
 initial_position = np.zeros((board_size + 1, board_size + 1, 2), dtype="float32")
 

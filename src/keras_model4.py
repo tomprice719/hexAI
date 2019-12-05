@@ -9,7 +9,7 @@ import itertools
 from utils import input_names
 
 
-def create_model(depth=5, breadth=40):
+def create_model(depth=5, breadth=40, learning_rate=0.0001):
     input_tensors = [Input(shape=(6, 6, 2), name=input_names[k]) for k in itertools.product((0, 1), (False, True))]
     out_components = []
     tensors = input_tensors
@@ -23,11 +23,11 @@ def create_model(depth=5, breadth=40):
         dense_layer = Dense(1, kernel_initializer="zeros")
         out_components += [dense_layer(pool(t)) for t in tensors[2:]]
 
-    output_tensor = Add()(out_components)
+    output_tensor = Add(name="winners")(out_components)
 
-    model = Model([input_tensors], [output_tensor])
+    model = Model(input_tensors, [output_tensor])
 
-    optimizer = Adam(lr=0.0001)
+    optimizer = Adam(lr=learning_rate)
 
     model.compile(
         loss=BinaryCrossentropy(from_logits=True),

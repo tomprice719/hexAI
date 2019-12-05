@@ -19,8 +19,8 @@ def add_training_data(moves, winner, num_initial_moves, positions, winners, slic
         j = i - num_initial_moves
         if j >= 0:
             for player_perspective, flipped in itertools.product((0, 1), (False, True)):
-                positions[input_names[(player_perspective, flipped)]][slice_][j] = \
-                    temp_positions[((player_perspective + i) % 2, flipped)]
+                positions[input_names[((player_perspective + i) % 2, flipped)]][slice_][j] = \
+                    temp_positions[(player_perspective, flipped)]
             winners[j] = winner == i % 2
 
 
@@ -55,6 +55,6 @@ def make_training_data(games, num_initial_moves, filename=None):
     if filename is not None:
         np.savez("../data/%s" % filename,
                  winners=winners,
-                 **dict((input_names[k], v) for k, v in positions.items()))
+                 **positions)
 
     return positions, winners

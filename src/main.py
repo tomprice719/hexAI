@@ -6,11 +6,11 @@ from utils import rb, board_size
 import numpy as np
 from keras_model4 import create_model
 
-# model1 = create_model()
-# model1.load_weights('../data/my_model2.h5')
-#
-# model2 = create_model(5, 40)
-# model2.load_weights('../data/my_model2.h5')
+model1 = create_model(5, 40)
+model1.load_weights('../data/my_model1.h5')
+
+model2 = create_model(5, 40)
+model2.load_weights('../data/my_model1.h5')
 
 num_initial_moves = 2
 
@@ -78,7 +78,7 @@ def train_from_selfplay(model, new_games_per_epoch, num_iterations):
 
 
 def train_from_file(model, filename, num_epochs):
-    data = np.load("../data/%s" % filename)
+    data = dict(np.load("../data/%s" % filename))
 
     model.fit(
         data,
@@ -94,10 +94,15 @@ def make_initial_training_data(num_games, filename):
     games = make_dumb_games.make_games(num_games)
     make_training_data(games, 0, filename)
 
+#make_initial_training_data(10000, "games1.npz")
 
-# while (True):
-#     train_from_selfplay(model2, 10, 300)
-#     model2.save_weights('../data/my_model7.h5')
-#     show_game(model2, model2)
-#     print("WIN RATIO", compare_models(model2, model2, 100))
-#     print("WIN RATIO", compare_models(model2, model1, 500))
+# train_from_file(model1, "games1.npz", 1)
+# model1.save_weights('../data/my_model1.h5')
+
+
+while (True):
+    train_from_selfplay(model2, 10, 300)
+    model2.save_weights('../data/my_model2.h5')
+    show_game(model2, model2)
+    print("WIN RATIO", compare_models(model2, model2, 100))
+    print("WIN RATIO", compare_models(model2, model1, 500))

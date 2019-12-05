@@ -41,8 +41,8 @@ def make_game(starting_moves=(), index=None):
             # If there is a move that wins immediately, play it and return
             wm = [board.point_to_index(p) for p in board.winning_moves(rb[i % 2])]
             if wm:
-                already_played_list.append((np.random.choice(wm), None))
-                already_played_list = [board.index_to_point(move) for move in already_played_list]
+                already_played_list.append(np.random.choice(wm))
+                already_played_list = [(board.index_to_point(move), None) for move in already_played_list]
                 return already_played_list, i % 2, None
             # Otherwise, prevent an immediate win by the opponent
             # or save a bridge, or play a random move, in that priority.
@@ -58,7 +58,7 @@ def make_game(starting_moves=(), index=None):
                     next_move = candidate_move
         board.update(rb[i % 2], next_move)
         already_played_set.add(next_move)
-        already_played_list.append((next_move, None))
+        already_played_list.append(next_move)
         bridge_saving_moves = list(get_bridge_saving_moves(board, rb[i % 2], next_move))
         # print(b)
     print(board)  # should never get here, printing board might give useful debugging information if we do
