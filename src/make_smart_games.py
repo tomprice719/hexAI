@@ -2,7 +2,7 @@
 # TODO: make GameMaker class, load model
 
 import numpy as np
-from utils import rb, player_index, input_names
+from utils import rb, player_index, input_names, board_size, initial_position
 import itertools
 from board import Board
 from random import randint
@@ -13,14 +13,6 @@ import math
 
 def sigmoid(x):
     return 1 / (1 + math.exp(-x))
-
-
-board_size = 5
-
-initial_position = np.zeros((board_size + 1, board_size + 1, 2), dtype="float32")
-
-initial_position[1:, 0, 0] = 1
-initial_position[0, 1:, 1] = 1
 
 
 class GamePhase(Enum):
@@ -144,15 +136,15 @@ class GameMaker:
         raise Exception("Unrecognized game phase.")
 
 
-def make_games(modelA, modelB, games_required, num_initial_moves, batch_size=3, allow_swap=True):
+def make_games(model_a, model_b, games_required, num_initial_moves, batch_size=3, allow_swap=True):
     game_makers = [GameMaker(board_size, num_initial_moves, allow_swap) for _ in range(batch_size)]
     games = []
     start_time = time.time()
 
     if num_initial_moves % 2 == 0:
-        models = [(modelA, "A"), (modelB, "B")]
+        models = [(model_a, "A"), (model_b, "B")]
     else:
-        models = [(modelB, "B"), (modelA, "A")]
+        models = [(model_b, "B"), (model_a, "A")]
 
     while game_makers:
 
@@ -191,70 +183,3 @@ def make_games(modelA, modelB, games_required, num_initial_moves, batch_size=3, 
             [g.refresh() for g in game_makers if g.finished()]
 
     return games
-
-
-def add_training_data(moves, winner, num_initial_moves, positions, winners, slice_):
-    temp_positions = dict(((player_perspective, flipped), np.copy(initial_position))
-                          for player_perspective, flipped in itertools.product((0, 1), (False, True)))
-
-    for i, (move, annotation) in enumerate(moves):
-        # update temporary positions
-        a, b = move
-        for player_perspective, flipped in itertools.product((0, 1), (False, True)):
-            a1, b1 = (a, b) if player_perspective == 0 else (b, a)
-            a2, b2 = (board_size - a1, board_size - b1) if flipped else (a1 + 1, b1 + 1)
-            temp_positions[(player_perspective, flipped)][a2, b2, (i + player_perspective) % 2] = 1
-
-        # update training data
-        j = i - num_initial_moves
-        if j >= 0:
-            for player_perspective, flipped in itertools.product((0, 1), (False, True)):
-                positions[input_names[(player_perspective, flipped)]][slice_][j] = \
-                    temp_positions[((player_perspective + i) % 2, flipped)]
-            winners[j] = winner == i % 2
-
-
-def make_training_data(model, games_required, num_initial_moves, save_filename=None):
-    games = make_games(model, model, games_required, num_initial_moves, allow_swap=False)
-    total_moves = sum(len(moves[num_initial_moves:]) for moves, winner, swapped in games)
-
-    positions = dict((input_names[k],
-                      np.zeros([total_moves,
-                                board_size + 1,
-                                board_size + 1,
-                                2],
-                               dtype="float32"))
-                     for k in itertools.product((0, 1), (False, True)))
-
-    winners = np.zeros(total_moves, dtype="float32")
-
-    total_moves_counter = 0
-
-    while games:
-        if len(games) % 1000 == 0:
-            print(len(games), "more games to process.")
-        moves, winner, swapped = games.pop()
-        counter_diff = len(moves[num_initial_moves:])
-        slice_ = np.s_[total_moves_counter: total_moves_counter + counter_diff]
-        add_training_data(moves, winner, num_initial_moves,
-                          positions,
-                          winners[slice_],
-                          slice_)
-        # total_moves_counter += len(moves)
-        total_moves_counter += counter_diff
-
-    if save_filename is not None:
-        np.savez("../data/%s" % save_filename,
-                 winners=winners,
-                 **dict((input_names[k], v) for k, v in positions.items()))
-
-    return positions, winners
-
-# for i in range(total_moves * 2):
-#     print(positions_array[i, :, :, 0])
-#     print(positions_array[i, :, :, 1])
-#     print("------------------------------")
-
-# np.savez("training_data5.npz",
-#          positions=positions_array,
-#          winners=winners_array)
