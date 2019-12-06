@@ -26,15 +26,15 @@ class GameMaker:
 
     def __init__(self, board_size, num_initial_moves, allow_swap):
         self.board = Board(board_size)
-        self.positions = dict()
+        self.current_positions = dict()
         self.allow_swap = allow_swap
         for player_perspective, flipped in itertools.product((0, 1), (False, True)):
-            self.positions[(player_perspective, flipped)] = np.copy(initial_position)
+            self.current_positions[(player_perspective, flipped)] = np.copy(initial_position)
         self.num_initial_moves = num_initial_moves
         self.refresh()
 
     def _get_position(self, player_perspective, flipped):
-        return self.positions[(player_perspective, flipped)]
+        return self.current_positions[(player_perspective, flipped)]
 
     def num_positions_required(self):
         if self.game_phase == GamePhase.FINISHED:
@@ -61,12 +61,12 @@ class GameMaker:
         self.swapped = None
         self.noswap_threshold = None
 
-    def fill_positions(self, positions, slice_):
+    def fill_positions(self, hypothetical_positions, slice_):
         if self.game_phase == GamePhase.FINISHED:
             return
         else:
             for player_perspective, flipped in itertools.product((0, 1), (False, True)):
-                positions[input_names[((self.current_player + player_perspective) % 2, flipped)]][slice_] = \
+                hypothetical_positions[input_names[((self.current_player + player_perspective) % 2, flipped)]][slice_] = \
                     self._get_position(player_perspective, flipped)
 
             for i, move in enumerate(self.valid_moves):
@@ -74,7 +74,7 @@ class GameMaker:
                 for player_perspective, flipped in itertools.product((0, 1), (False, True)):
                     a1, b1 = (a, b) if player_perspective == 0 else (b, a)
                     a2, b2 = (self.board.board_size - a1, self.board.board_size - b1) if flipped else (a1 + 1, b1 + 1)
-                    positions[input_names[((self.current_player + player_perspective) % 2, flipped)]] \
+                    hypothetical_positions[input_names[((self.current_player + player_perspective) % 2, flipped)]] \
                         [slice_][i, a2, b2, (self.current_player + player_perspective) % 2] = 1
 
     def _play_move(self, move_index, annotation=None):
