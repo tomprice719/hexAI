@@ -64,7 +64,7 @@ def show_game(red_model, blue_model):
 #     return positions, winners
 
 
-def train_from_selfplay(model, new_games_per_epoch, num_iterations):
+def train_from_selfplay(model, new_games_per_epoch, num_iterations, use_weight=False):
     for i in range(num_iterations):
         if i % 10 == 0:
             print(i)
@@ -78,7 +78,7 @@ def train_from_selfplay(model, new_games_per_epoch, num_iterations):
             epochs=1,
             shuffle=True,
             verbose=0,
-            sample_weight=1 / move_numbers
+            sample_weight=1 / move_numbers if use_weight else None
         )
 
 
