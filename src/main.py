@@ -5,6 +5,8 @@ from board import Board
 from utils import rb, board_size
 import numpy as np
 from keras_model4 import create_model
+from collections import defaultdict
+import itertools
 
 model1 = create_model(5, 40)
 model1.load_weights('../data/my_model1.h5')
@@ -15,12 +17,13 @@ model2.load_weights('../data/my_model1.h5')
 num_initial_moves = 2
 
 
-def compare_models(model1, model2, half_num_games):
-    red_wins = [(winner + swapped) % 2 for game, winner, swapped in
-                make_smart_games.make_games(model1, model2, half_num_games, num_initial_moves)].count(0) + \
-               [(winner + swapped) % 2 for game, winner, swapped in
-                make_smart_games.make_games(model2, model1, half_num_games, num_initial_moves)].count(1)
-    return red_wins / (half_num_games * 2)
+def compare_models(model1, model2, num_games):
+    win_counter = defaultdict(int)
+    for game, winner, swapped in make_smart_games.make_games(model1, model2, num_games, num_initial_moves):
+        win_counter[(winner, swapped)] += 1
+    for winner, swapped in itertools.product((0, 1), (0, 1)):
+        print("winner: %d swapped: %d count: %d" %
+              (winner, swapped, win_counter[(winner, swapped)]))
 
 
 def show_game(red_model, blue_model):
@@ -104,5 +107,8 @@ while (True):
     train_from_selfplay(model2, 10, 300)
     model2.save_weights('../data/my_model2.h5')
     show_game(model2, model2)
-    print("WIN RATIO", compare_models(model2, model2, 100))
-    print("WIN RATIO", compare_models(model2, model1, 500))
+    compare_models(model1, model1, 100)
+    print("-")
+    compare_models(model1, model2, 100)
+    print("-")
+    compare_models(model2, model1, 100)
