@@ -26,19 +26,12 @@ class GameMaker:
 
     def __init__(self, board_size, num_initial_moves, allow_swap):
         self.board = Board(board_size)
-        self.current_player = 0
-        self.moves_played = []
-        self.valid_moves = list(range(self.board.board_size ** 2))
         self.positions = dict()
         self.allow_swap = allow_swap
         for player_perspective, flipped in itertools.product((0, 1), (False, True)):
             self.positions[(player_perspective, flipped)] = np.copy(initial_position)
         self.num_initial_moves = num_initial_moves
-        for i in range(self.num_initial_moves):
-            self._play_move(randint(0, len(self.valid_moves) - 1))
-        self.game_phase = GamePhase.BEFORE_SWAP
-        self.swapped = None
-        self.noswap_threshold = None
+        self.refresh()
 
     def _get_position(self, player_perspective, flipped):
         return self.positions[(player_perspective, flipped)]
@@ -140,7 +133,7 @@ class GameMaker:
 def make_games(model_a, model_b, games_required, num_initial_moves, batch_size=3, allow_swap=True):
     game_makers = [GameMaker(board_size, num_initial_moves, allow_swap) for _ in range(batch_size)]
     games = []
-    start_time = time.time()
+    # start_time = time.time()
 
     if num_initial_moves % 2 == 0:
         models = [(model_a, "A"), (model_b, "B")]
@@ -174,8 +167,8 @@ def make_games(model_a, model_b, games_required, num_initial_moves, batch_size=3
                 position_counter += g.num_positions_required()
 
         new_games = [g.game() for g in game_makers if g.finished()]
-        if (len(games) + len(new_games)) // 100 > len(games) // 100:
-            print(time.time() - start_time, len(games) + len(new_games))
+        # if (len(games) + len(new_games)) // 100 > len(games) // 100:
+        #     print(time.time() - start_time, len(games) + len(new_games))
         games += new_games
 
         if len(games) > games_required:

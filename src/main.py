@@ -109,6 +109,6 @@ while (True):
     show_game(model2, model2)
     compare_models(model1, model1, 100)
     print("-")
-    compare_models(model1, model2, 100)
+    compare_models(model1, model2, 500)
     print("-")
-    compare_models(model2, model1, 100)
+    compare_models(model2, model1, 500)
