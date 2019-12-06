@@ -11,7 +11,7 @@ import itertools
 model1 = create_model(5, 40)
 model1.load_weights('../data/my_model1.h5')
 
-model2 = create_model(5, 40, learning_rate=0.001)
+model2 = create_model(5, 40)
 model2.load_weights('../data/my_model1.h5')
 
 num_initial_moves = 2
@@ -69,6 +69,7 @@ def train_from_selfplay(model, new_games_per_epoch, num_iterations, use_weight=F
         if i % 10 == 0:
             print(i)
         games = make_smart_games.make_games(model, model, new_games_per_epoch, num_initial_moves)
+        assert len(games) == new_games_per_epoch
         positions, winners, move_numbers = make_training_data(games, num_initial_moves)
 
         model.fit(
@@ -106,7 +107,7 @@ def make_initial_training_data(num_games, filename):
 # model1.save_weights('../data/my_model1.h5')
 
 
-while (True):
+while True:
     train_from_selfplay(model2, 10, 300)
     model2.save_weights('../data/my_model2.h5')
     show_game(model2, model2)
