@@ -11,7 +11,7 @@ import itertools
 model1 = create_model(5, 40)
 model1.load_weights('../data/my_model1.h5')
 
-model2 = create_model(5, 40)
+model2 = create_model(5, 40, learning_rate=0.001)
 model2.load_weights('../data/my_model1.h5')
 
 num_initial_moves = 2
@@ -24,6 +24,7 @@ def compare_models(model1, model2, num_games):
     for winner, swapped in itertools.product((0, 1), (0, 1)):
         print("winner: %d swapped: %d count: %d" %
               (winner, swapped, win_counter[(winner, swapped)]))
+        print("win ratio %f" % ((win_counter[(0, 0)] + win_counter[(1, 1)]) / num_games))
 
 
 def show_game(red_model, blue_model):
@@ -68,7 +69,7 @@ def train_from_selfplay(model, new_games_per_epoch, num_iterations):
         if i % 10 == 0:
             print(i)
         games = make_smart_games.make_games(model, model, new_games_per_epoch, num_initial_moves)
-        positions, winners = make_training_data(games, num_initial_moves)
+        positions, winners, move_numbers = make_training_data(games, num_initial_moves)
 
         model.fit(
             positions,
@@ -76,7 +77,8 @@ def train_from_selfplay(model, new_games_per_epoch, num_iterations):
             batch_size=64,
             epochs=1,
             shuffle=True,
-            verbose=0
+            verbose=0,
+            sample_weight=1 / move_numbers
         )
 
 
@@ -97,7 +99,8 @@ def make_initial_training_data(num_games, filename):
     games = make_dumb_games.make_games(num_games)
     make_training_data(games, 0, filename)
 
-#make_initial_training_data(10000, "games1.npz")
+
+# make_initial_training_data(10000, "games1.npz")
 
 # train_from_file(model1, "games1.npz", 1)
 # model1.save_weights('../data/my_model1.h5')

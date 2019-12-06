@@ -3,7 +3,7 @@ import itertools
 import numpy as np
 
 
-def add_training_data(moves, winner, num_initial_moves, positions, winners, slice_):
+def add_training_data(moves, winner, num_initial_moves, positions, winners, move_numbers, slice_):
     temp_positions = dict(((player_perspective, flipped), np.copy(initial_position))
                           for player_perspective, flipped in itertools.product((0, 1), (False, True)))
 
@@ -22,6 +22,7 @@ def add_training_data(moves, winner, num_initial_moves, positions, winners, slic
                 positions[input_names[((player_perspective + i) % 2, flipped)]][slice_][j] = \
                     temp_positions[(player_perspective, flipped)]
             winners[j] = winner == i % 2
+            move_numbers[j] = i + 1
 
 
 def make_training_data(games, num_initial_moves, filename=None):
@@ -36,6 +37,7 @@ def make_training_data(games, num_initial_moves, filename=None):
                      for k in itertools.product((0, 1), (False, True)))
 
     winners = np.zeros(total_moves, dtype="float32")
+    move_numbers = np.zeros(total_moves, dtype="float32")
 
     total_moves_counter = 0
 
@@ -48,6 +50,7 @@ def make_training_data(games, num_initial_moves, filename=None):
         add_training_data(moves, winner, num_initial_moves,
                           positions,
                           winners[slice_],
+                          move_numbers[slice_],
                           slice_)
         # total_moves_counter += len(moves)
         total_moves_counter += counter_diff
@@ -55,6 +58,7 @@ def make_training_data(games, num_initial_moves, filename=None):
     if filename is not None:
         np.savez("../data/%s" % filename,
                  winners=winners,
+                 move_numbers = move_numbers,
                  **positions)
 
-    return positions, winners
+    return positions, winners, move_numbers
