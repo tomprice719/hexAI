@@ -7,12 +7,13 @@ import numpy as np
 from keras_model4 import create_model, create_model2
 from collections import defaultdict
 import itertools
+import time
 
 model1 = create_model(5, 40)
 model1.load_weights('../data/my_model1.h5')
 
-model2 = create_model(depth = 10)
-model2.load_weights('../data/my_model4.h5')
+model2 = create_model()
+model2.load_weights('../data/my_model1.h5')
 
 num_initial_moves = 2
 
@@ -27,16 +28,17 @@ def compare_models(model1, model2, num_games):
     print("win ratio %f" % ((win_counter[(0, 0)] + win_counter[(1, 1)]) / num_games))
 
 
-def show_game(red_model, blue_model):
-    moves, winner, swapped = make_smart_games.make_games(red_model, blue_model, 1, num_initial_moves, batch_size=1)[0]
-    b = Board(board_size)
-    for i, (move, annotation) in enumerate(moves):
-        b.update(rb[i % 2], b.point_to_index(move))
-        print(b)
-        print(annotation)
-        print("-------------------------------------")
-    print("winner:", winner, "swapped:", swapped)
-    print()
+def show_game(red_model, blue_model, num_games = 1):
+    games = make_smart_games.make_games(red_model, blue_model, num_games, num_initial_moves, batch_size=1)
+    for moves, winner, swapped in games:
+        b = Board(board_size)
+        for i, (move, annotation) in enumerate(moves):
+            b.update(rb[i % 2], b.point_to_index(move))
+            print(b)
+            print(annotation)
+            print("-------------------------------------")
+        print("winner:", winner, "swapped:", swapped)
+        print()
 
 
 # def train_from_selfplay(model, epoch_size, new_games_per_epoch, num_iterations, training_data):
@@ -104,12 +106,14 @@ def make_initial_training_data(num_games, filename):
 # make_initial_training_data(10000, "games1.npz")
 
 # train_from_file(model2, "games1.npz", 1)
-# model2.save_weights('../data/my_model4.h5')
+# model2.save_weights('../data/my_model6.h5')
 
+start_time = time.time()
 
 while (True):
+    print(time.time() - start_time)
     train_from_selfplay(model2, 10, 300, True)
-    model2.save_weights('../data/my_model5.h5')
+    #model2.save_weights('../data/my_model7.h5')
     show_game(model2, model2)
     compare_models(model1, model1, 100)
     print("-")

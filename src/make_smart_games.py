@@ -161,8 +161,9 @@ def make_games(model_a, model_b, games_required, num_initial_moves, batch_size=3
 
             position_counter = 0
             for g in game_makers:
-                g.update(win_logits[position_counter: position_counter + g.num_positions_required()], label)
-                position_counter += g.num_positions_required()
+                num_positions_required = g.num_positions_required()
+                g.update(win_logits[position_counter: position_counter + num_positions_required], label)
+                position_counter += num_positions_required
 
         finished_game_makers = [g for g in game_makers if g.finished()]
         game_makers = [g for g in game_makers if not g.finished()]
@@ -173,5 +174,15 @@ def make_games(model_a, model_b, games_required, num_initial_moves, batch_size=3
         for g in finished_game_makers:
             g.refresh()
         game_makers += finished_game_makers
+
+        # new_games = [g.game() for g in game_makers if g.finished()]
+        # # if (len(games) + len(new_games)) // 100 > len(games) // 100:
+        # #     print(time.time() - start_time, len(games) + len(new_games))
+        # games += new_games
+        #
+        # if len(games) > games_required:
+        #     game_makers = [g for g in game_makers if not g.finished()]
+        # else:
+        #     [g.refresh() for g in game_makers if g.finished()]
 
     return games
