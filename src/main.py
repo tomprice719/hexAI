@@ -107,15 +107,9 @@ def make_initial_training_data(num_games, filename):
 # model2.save_weights('../data/my_model4.h5')
 
 
-<<<<<<< HEAD
 while (True):
     train_from_selfplay(model2, 10, 300, True)
     model2.save_weights('../data/my_model5.h5')
-=======
-while True:
-    train_from_selfplay(model2, 10, 300)
-    model2.save_weights('../data/my_model2.h5')
->>>>>>> newthing
     show_game(model2, model2)
     compare_models(model1, model1, 100)
     print("-")
