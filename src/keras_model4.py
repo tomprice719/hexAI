@@ -9,7 +9,7 @@ import itertools
 from utils import input_names
 
 
-def create_model(depth=5, breadth=40, learning_rate=0.0001):
+def create_model(depth=5, breadth=40, learning_rate=0.001):
     input_tensors = [Input(shape=(6, 6, 2), name=input_names[k]) for k in itertools.product((0, 1), (False, True))]
     out_components = []
     tensors = input_tensors
@@ -37,7 +37,7 @@ def create_model(depth=5, breadth=40, learning_rate=0.0001):
     return model
 
 
-def create_model2(depth=5, breadth=40, breadth2=40, learning_rate=0.0001):
+def create_model2(depth=5, breadth=40, breadth2=40, learning_rate=0.001):
     input_tensors = [Input(shape=(6, 6, 2), name=input_names[k]) for k in itertools.product((0, 1), (False, True))]
     hidden_components = []
     tensors = input_tensors

@@ -12,8 +12,8 @@ import time
 model1 = create_model(5, 40)
 model1.load_weights('../data/my_model1.h5')
 
-model2 = create_model()
-model2.load_weights('../data/my_model1.h5')
+model2 = create_model(depth = 10)
+model2.load_weights('../data/my_model6.h5')
 
 num_initial_moves = 2
 
@@ -105,17 +105,17 @@ def make_initial_training_data(num_games, filename):
 
 # make_initial_training_data(10000, "games1.npz")
 
-# train_from_file(model2, "games1.npz", 1)
-# model2.save_weights('../data/my_model6.h5')
+train_from_file(model2, "games1.npz", 1)
+model2.save_weights('../data/my_model6.h5')
 
 start_time = time.time()
 
 while (True):
     print(time.time() - start_time)
-    train_from_selfplay(model2, 10, 300, True)
-    #model2.save_weights('../data/my_model7.h5')
+    train_from_selfplay(model2, 10, 300, False)
+    model2.save_weights('../data/my_model6.h5')
     show_game(model2, model2)
-    compare_models(model1, model1, 100)
+    compare_models(model2, model2, 100)
     print("-")
     compare_models(model1, model2, 500)
     print("-")
