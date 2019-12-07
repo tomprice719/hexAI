@@ -57,7 +57,6 @@ class GameMaker:
             self._play_move(randint(0, len(self.valid_moves) - 1))
         self.game_phase = GamePhase.BEFORE_SWAP
         self.swapped = None
-        self.noswap_threshold = None
 
     def fill_positions(self, hypothetical_positions, slice_):
         if self.game_phase == GamePhase.FINISHED:
@@ -96,8 +95,8 @@ class GameMaker:
         if self.game_phase == GamePhase.BEFORE_SWAP:
             medium_move_index = min(range(len(self.valid_moves)),
                                     key=lambda x: abs(win_logits[x]))
-            self.noswap_threshold = float(win_logits[medium_move_index])
-            self._play_move(medium_move_index, (model_label, self.noswap_threshold, sigmoid(self.noswap_threshold)))
+            medium_move_logits = float(win_logits[medium_move_index])
+            self._play_move(medium_move_index, (model_label, medium_move_logits, sigmoid(medium_move_logits)))
             if self.allow_swap:
                 self.game_phase = GamePhase.MAY_SWAP
             else:
@@ -107,7 +106,7 @@ class GameMaker:
             best_move_index = max(range(len(self.valid_moves)),
                                   key=lambda x: win_logits[x])
             best_move_logits = float(win_logits[best_move_index])
-            if best_move_logits > self.noswap_threshold:
+            if best_move_logits > 0.5:
                 self._play_move(best_move_index, (model_label, best_move_logits, sigmoid(best_move_logits)))
                 self.swapped = 0
             else:

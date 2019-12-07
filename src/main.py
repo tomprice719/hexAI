@@ -105,8 +105,8 @@ def make_initial_training_data(num_games, filename):
 
 # make_initial_training_data(10000, "games1.npz")
 
-train_from_file(model2, "games1.npz", 1)
-model2.save_weights('../data/my_model6.h5')
+#train_from_file(model2, "games1.npz", 1)
+#model2.save_weights('../data/my_model6.h5')
 
 start_time = time.time()
 
