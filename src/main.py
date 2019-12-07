@@ -69,6 +69,7 @@ def train_from_selfplay(model, new_games_per_epoch, num_iterations, use_weight=F
         if i % 10 == 0:
             print(i)
         games = make_smart_games.make_games(model, model, new_games_per_epoch, num_initial_moves)
+        assert len(games) == new_games_per_epoch
         positions, winners, move_numbers = make_training_data(games, num_initial_moves)
 
         model.fit(
@@ -106,9 +107,15 @@ def make_initial_training_data(num_games, filename):
 # model2.save_weights('../data/my_model4.h5')
 
 
+<<<<<<< HEAD
 while (True):
     train_from_selfplay(model2, 10, 300, True)
     model2.save_weights('../data/my_model5.h5')
+=======
+while True:
+    train_from_selfplay(model2, 10, 300)
+    model2.save_weights('../data/my_model2.h5')
+>>>>>>> newthing
     show_game(model2, model2)
     compare_models(model1, model1, 100)
     print("-")

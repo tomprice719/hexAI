@@ -1,12 +1,10 @@
 # Generates games by choosing moves with maximum win probability according to a trained model
-# TODO: make GameMaker class, load model
 
 import numpy as np
 from utils import rb, player_index, input_names, board_size, initial_position
 import itertools
 from board import Board
 from random import randint
-import time
 from enum import Enum
 import math
 
@@ -127,7 +125,7 @@ class GameMaker:
         if self.game_phase == GamePhase.FINISHED:
             return
 
-        raise Exception("Unrecognized game phase.")
+        assert False
 
 
 def make_games(model_a, model_b, games_required, num_initial_moves, batch_size=3, allow_swap=True):
@@ -166,14 +164,14 @@ def make_games(model_a, model_b, games_required, num_initial_moves, batch_size=3
                 g.update(win_logits[position_counter: position_counter + g.num_positions_required()], label)
                 position_counter += g.num_positions_required()
 
-        new_games = [g.game() for g in game_makers if g.finished()]
-        # if (len(games) + len(new_games)) // 100 > len(games) // 100:
-        #     print(time.time() - start_time, len(games) + len(new_games))
-        games += new_games
-
-        if len(games) > games_required:
-            game_makers = [g for g in game_makers if not g.finished()]
-        else:
-            [g.refresh() for g in game_makers if g.finished()]
+        finished_game_makers = [g for g in game_makers if g.finished()]
+        game_makers = [g for g in game_makers if not g.finished()]
+        games += [g.game() for g in finished_game_makers]
+        new_games_required = games_required - len(games) - len(game_makers)
+        assert new_games_required >= 0
+        finished_game_makers = finished_game_makers[:new_games_required]
+        for g in finished_game_makers:
+            g.refresh()
+        game_makers += finished_game_makers
 
     return games
