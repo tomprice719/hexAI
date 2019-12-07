@@ -4,15 +4,15 @@ from training_data import make_training_data
 from board import Board
 from utils import rb, board_size
 import numpy as np
-from keras_model4 import create_model
+from keras_model4 import create_model, create_model2
 from collections import defaultdict
 import itertools
 
 model1 = create_model(5, 40)
 model1.load_weights('../data/my_model1.h5')
 
-model2 = create_model(5, 40, learning_rate=0.001)
-model2.load_weights('../data/my_model1.h5')
+model2 = create_model(depth = 10)
+model2.load_weights('../data/my_model4.h5')
 
 num_initial_moves = 2
 
@@ -24,7 +24,7 @@ def compare_models(model1, model2, num_games):
     for winner, swapped in itertools.product((0, 1), (0, 1)):
         print("winner: %d swapped: %d count: %d" %
               (winner, swapped, win_counter[(winner, swapped)]))
-        print("win ratio %f" % ((win_counter[(0, 0)] + win_counter[(1, 1)]) / num_games))
+    print("win ratio %f" % ((win_counter[(0, 0)] + win_counter[(1, 1)]) / num_games))
 
 
 def show_game(red_model, blue_model):
@@ -102,13 +102,13 @@ def make_initial_training_data(num_games, filename):
 
 # make_initial_training_data(10000, "games1.npz")
 
-# train_from_file(model1, "games1.npz", 1)
-# model1.save_weights('../data/my_model1.h5')
+# train_from_file(model2, "games1.npz", 1)
+# model2.save_weights('../data/my_model4.h5')
 
 
 while (True):
-    train_from_selfplay(model2, 10, 300)
-    model2.save_weights('../data/my_model2.h5')
+    train_from_selfplay(model2, 10, 300, True)
+    model2.save_weights('../data/my_model5.h5')
     show_game(model2, model2)
     compare_models(model1, model1, 100)
     print("-")
