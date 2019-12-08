@@ -5,7 +5,7 @@ def opposite_player(player):
         return "blue"
     return "red"
 
-board_size = 5
+board_size = 9
 
 rb = ("red", "blue")
 
