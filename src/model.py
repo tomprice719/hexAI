@@ -6,11 +6,12 @@ from keras.optimizers import Adam
 from keras.losses import BinaryCrossentropy
 from keras.metrics import BinaryAccuracy
 import itertools
-from utils import input_names
+from utils import input_names, board_size
 
 
 def create_model(depth=5, breadth=40, learning_rate=0.001):
-    input_tensors = [Input(shape=(6, 6, 2), name=input_names[k]) for k in itertools.product((0, 1), (False, True))]
+    input_tensors = [Input(shape=(board_size + 1, board_size + 1, 2), name=input_names[k])
+                     for k in itertools.product((0, 1), (False, True))]
     out_components = []
     tensors = input_tensors
     pool = GlobalAveragePooling2D()
@@ -38,7 +39,8 @@ def create_model(depth=5, breadth=40, learning_rate=0.001):
 
 
 def create_model2(depth=5, breadth=40, breadth2=40, learning_rate=0.001):
-    input_tensors = [Input(shape=(6, 6, 2), name=input_names[k]) for k in itertools.product((0, 1), (False, True))]
+    input_tensors = [Input(shape=(board_size + 1, board_size + 1, 2), name=input_names[k])
+                     for k in itertools.product((0, 1), (False, True))]
     hidden_components = []
     tensors = input_tensors
     pool = GlobalAveragePooling2D()
