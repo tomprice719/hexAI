@@ -1,15 +1,30 @@
-from utils import opposite_player, neighbour_difference
+from enum import Enum
 
-symbols = {("red", False) : "o ", ("blue", False) : "* ", "empty": ". ",
-           ("red", True): "@ ", ("blue", True) : "# "}
+neighbour_difference = [(-1, 0), (-1, 1), (0, 1), (1, 0), (1, -1), (0, -1)]
+
+
+class Player(Enum):
+    RED = 0
+    BLUE = 1
+
+
+def opposite_player(player):
+    if player not in Player:
+        raise Exception("player must be element of Player enum")
+    return Player(1 - player.value)
+
+
+symbols = {(Player.RED, False): "o ", (Player.BLUE, True): "* ", "empty": ". ",
+           (Player.RED, True): "@ ", (Player.BLUE, True): "# "}
+
 
 class Board:
 
     def __init__(self, board_size):
         self.board_size = board_size
         self.winner = None
-        self._hexes = {"red": set(), "blue": set()}
-        self._connected = {"red": set(), "blue": set()}
+        self._hexes = dict((p, set()) for p in Player)
+        self._connected = dict((p, set()) for p in Player)
         self._last_move = None
         self._top = [(x, 0) for x in range(board_size)]
         self._bottom = [(x, board_size - 1) for x in range(board_size)]
@@ -26,26 +41,25 @@ class Board:
         self._right_boundary = set(self._right)
 
     def is_empty(self):
-        return (not self._hexes["red"]) and (not self._hexes["blue"])
-    
+        return not any(self._hexes[p] for p in Player)
+
     def update(self, player, move):
         point = self.index_to_point(move)
-        assert(point not in self._hexes["red"])
-        assert (point not in self._hexes["blue"])
+        assert (all(point not in self._hexes[p] for p in Player))
         self._hexes[player].add(point)
         self._update_sets(player, point)
         self._last_move = point
 
     def legal_move(self, index):
         point = self.index_to_point(index)
-        return not (self.has_hex("red", point) or self.has_hex("blue", point))
+        return not any(self.has_hex(p, point) for p in Player)
 
     def has_hex(self, player, point):
         return point in self._hexes[player]
 
     def refresh(self):
-        self._hexes["red"].clear()
-        self._hexes["blue"].clear()
+        for p in Player:
+            self._hexes[p].clear()
         self._top_connected.clear()
         self._top_boundary.clear()
         self._top_boundary.update(self._top)
@@ -69,12 +83,12 @@ class Board:
 
     def _starting_side(self, player, point):
         i, j = point
-        k = (j if player == "red" else i)
+        k = (j if player == Player.RED else i)
         return k == 0
 
     def _finishing_side(self, player, point):
         i, j = point
-        k = (j if player == "red" else i)
+        k = (j if player == Player.RED else i)
         return k == self.board_size - 1
 
     def _neighbours(self, point):
@@ -101,22 +115,23 @@ class Board:
                         boundary.add(neighbour)
 
     def winning_moves(self, player):
-        if player == "red":
+        if player == Player.RED:
             return self._top_boundary.intersection(self._bottom_boundary)
-        if player == "blue":
+        if player == Player.BLUE:
             return self._left_boundary.intersection(self._right_boundary)
+        raise Exception("Player must be an element of the Player enum.")
 
     def _update_sets(self, player, move_point):
-        if player == "red":
-            self._expand(self._top_connected, self._top_boundary, "red", move_point)
-            self._expand(self._bottom_connected, self._bottom_boundary, "red", move_point)
+        if player == Player.RED:
+            self._expand(self._top_connected, self._top_boundary, Player.RED, move_point)
+            self._expand(self._bottom_connected, self._bottom_boundary, Player.RED, move_point)
             if move_point in self._top_connected and move_point in self._bottom_connected:
-                self.winner = "red"
-        elif player == "blue":
-            self._expand(self._left_connected, self._left_boundary, "blue", move_point)
-            self._expand(self._right_connected, self._right_boundary, "blue", move_point)
+                self.winner = Player.RED
+        elif player == Player.BLUE:
+            self._expand(self._left_connected, self._left_boundary, Player.BLUE, move_point)
+            self._expand(self._right_connected, self._right_boundary, Player.BLUE, move_point)
             if move_point in self._left_connected and move_point in self._right_connected:
-                self.winner = "blue"
+                self.winner = Player.BLUE
         for boundary in [self._top_boundary,
                          self._bottom_boundary,
                          self._left_boundary,
@@ -152,7 +167,7 @@ class Board:
             rep += " " * i
             for j in range(self.board_size):
                 symbol = symbols["empty"]
-                for player in ["red", "blue"]:
+                for player in Player:
                     if self.has_hex(player, (j, i)):
                         new = (j, i) == self._last_move
                         symbol = symbols[(player, new)]

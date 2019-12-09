@@ -1,9 +1,9 @@
 # Generates games by choosing moves with maximum win probability according to a trained model
 
 import numpy as np
-from utils import rb, player_index, input_names, board_size, initial_position
+from utils import input_names, board_size, initial_position
 import itertools
-from board import Board
+from board_utils import Board, Player
 from random import randint
 from enum import Enum
 import math
@@ -44,7 +44,7 @@ class GameMaker:
         return self.board.winner is not None
 
     def game(self):
-        return self.moves_played, player_index[self.board.winner], self.swapped
+        return self.moves_played, self.board.winner.value, self.swapped
 
     def refresh(self):
         self.board.refresh()
@@ -84,7 +84,7 @@ class GameMaker:
             a2, b2 = (self.board.board_size - a1, self.board.board_size - b1) if flipped else (a1 + 1, b1 + 1)
             self._get_position(player_perspective, flipped)[a2, b2, (self.current_player + player_perspective) % 2] = 1
 
-        self.board.update(rb[self.current_player], move)
+        self.board.update(Player(self.current_player), move)
         self.current_player = 1 - self.current_player
         self.valid_moves[move_index] = self.valid_moves[-1]
         del self.valid_moves[-1]
@@ -130,7 +130,6 @@ class GameMaker:
 def make_games(model_a, model_b, games_required, num_initial_moves, batch_size=3, allow_swap=True):
     game_makers = [GameMaker(board_size, num_initial_moves, allow_swap) for _ in range(batch_size)]
     games = []
-    # start_time = time.time()
 
     if num_initial_moves % 2 == 0:
         models = [(model_a, "A"), (model_b, "B")]
@@ -173,15 +172,5 @@ def make_games(model_a, model_b, games_required, num_initial_moves, batch_size=3
         for g in finished_game_makers:
             g.refresh()
         game_makers += finished_game_makers
-
-        # new_games = [g.game() for g in game_makers if g.finished()]
-        # # if (len(games) + len(new_games)) // 100 > len(games) // 100:
-        # #     print(time.time() - start_time, len(games) + len(new_games))
-        # games += new_games
-        #
-        # if len(games) > games_required:
-        #     game_makers = [g for g in game_makers if not g.finished()]
-        # else:
-        #     [g.refresh() for g in game_makers if g.finished()]
 
     return games

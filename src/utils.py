@@ -1,17 +1,7 @@
 import numpy as np
 
-def opposite_player(player):
-    if player == "red":
-        return "blue"
-    return "red"
 
 board_size = 9
-
-rb = ("red", "blue")
-
-player_index = {"red": 0, "blue": 1}
-
-neighbour_difference = [(-1, 0), (-1, 1), (0, 1), (1, 0), (1, -1), (0, -1)]
 
 input_names = {(0, False): "current_player_no_flip",
                (0, True): "current_player_180_flip",

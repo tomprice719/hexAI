@@ -1,17 +1,15 @@
-from board import Board
+from board_utils import Board, neighbour_difference, Player, opposite_player
 import numpy as np
-from utils import rb, neighbour_difference, opposite_player, board_size
-
-board = Board(board_size)
+from utils import board_size
 
 
 def get_bridge_saving_moves(board, player, move):
     def get_colour(point):
-        a, b = point
-        if b < 0 or b >= board_size or board.has_hex("red", point):
-            return "red"
-        if a < 0 or a >= board_size or board.has_hex("blue", point):
-            return "blue"
+        a1, b1 = point
+        if b1 < 0 or b1 >= board_size or board.has_hex(Player.RED, point):
+            return Player.RED
+        if a1 < 0 or a1 >= board_size or board.has_hex(Player.Blue, point):
+            return Player.Blue
         return None
 
     a, b = board.index_to_point(move)
@@ -26,7 +24,7 @@ def get_bridge_saving_moves(board, player, move):
             yield board.point_to_index(neighbours[i % 6])
 
 
-def make_game(starting_moves=(), index=None):
+def make_game(board, starting_moves=(), index=None):
     if index is not None and index % 1000 == 0:
         print("Creating game", index)
     board.refresh()
@@ -39,7 +37,7 @@ def make_game(starting_moves=(), index=None):
             next_move = starting_moves[i]
         else:
             # If there is a move that wins immediately, play it and return
-            wm = [board.point_to_index(p) for p in board.winning_moves(rb[i % 2])]
+            wm = [board.point_to_index(p) for p in board.winning_moves(Player(i % 2))]
             if wm:
                 already_played_list.append(np.random.choice(wm))
                 already_played_list = [(board.index_to_point(move), None) for move in already_played_list]
@@ -47,65 +45,28 @@ def make_game(starting_moves=(), index=None):
             # Otherwise, prevent an immediate win by the opponent
             # or save a bridge, or play a random move, in that priority.
             next_move = None
-            wm = [board.point_to_index(p) for p in board.winning_moves(rb[(i + 1) % 2])]
+            wm = [board.point_to_index(p) for p in board.winning_moves(Player((i + 1) % 2))]
             if wm:
                 next_move = np.random.choice(wm)
             if next_move is None and bridge_saving_moves:
                 next_move = np.random.choice(bridge_saving_moves)
-            while next_move == None:
+            while next_move is None:
                 candidate_move = random_moves.pop()
                 if candidate_move not in already_played_set:
                     next_move = candidate_move
-        board.update(rb[i % 2], next_move)
+        board.update(Player(i % 2), next_move)
         already_played_set.add(next_move)
         already_played_list.append(next_move)
-        bridge_saving_moves = list(get_bridge_saving_moves(board, rb[i % 2], next_move))
-        # print(b)
+        bridge_saving_moves = list(get_bridge_saving_moves(board, Player(i % 2), next_move))
     print(board)  # should never get here, printing board might give useful debugging information if we do
+    assert False
 
 
 def make_games(num_games):
     games = []
+    board = Board(board_size)
     for i in range(num_games):
         if i % 1000 == 0:
             print("Making game %d" % i)
-        games.append(make_game())
+        games.append(make_game(board))
     return games
-
-# def add_training_data(moves, winner, positions_array, winners_array):
-#     p, p_swapped = np.zeros_like(positions_array[0, 1:, 1:]), np.zeros_like(positions_array[0, 1:, 1:])
-#     for i, move in enumerate(moves):
-#         a, b = move
-#         # Update temporary boards
-#         p[a, b, i % 2] = 1
-#         p_swapped[b, a, (i + 1) % 2] = 1
-#         # update training data, possibly swapping colours so that current player is always red
-#         positions_array[i, 1:, 1:] = (p, p_swapped)[i % 2]
-#         winners_array[i] = (winner == i % 2)
-#
-#
-# games = [make_game(index=i) for i in range(num_games)]
-# total_moves = sum(len(moves) for moves, winner in games)
-#
-# positions_array = np.zeros((total_moves, board_size + 1, board_size + 1, 2))
-# winners_array = np.zeros(total_moves)
-#
-# positions_array[:, 1:, 0, 0] = 1
-# positions_array[:, 0, 1:, 1] = 1
-#
-# total_moves_counter = 0
-#
-# while games:
-#     if len(games) % 1000 == 0:
-#         print(len(games), "more games to process.")
-#     moves, winner = games.pop()
-#     add_training_data(moves, winner,
-#                       positions_array[total_moves_counter: total_moves_counter + len(moves)],
-#                       winners_array[total_moves_counter: total_moves_counter + len(moves)])
-#     # total_moves_counter += len(moves)
-#     total_moves_counter += len(moves)
-#
-#
-# np.savez("training_data4.npz",
-#          positions=positions_array,
-#          winners=winners_array)
