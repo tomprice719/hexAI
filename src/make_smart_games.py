@@ -50,7 +50,7 @@ class GameMaker:
         self.board.refresh()
         self.current_player = 0
         self.moves_played = []
-        self.valid_moves = list(range(self.board.board_size ** 2))
+        self.valid_moves = list(self.board.all_points)
         for player_perspective, flipped in itertools.product((0, 1), (False, True)):
             np.copyto(self._get_position(player_perspective, flipped), initial_position)
         for i in range(self.num_initial_moves):
@@ -66,8 +66,7 @@ class GameMaker:
                 hypothetical_positions[input_names[((self.current_player + player_perspective) % 2, flipped)]][slice_] = \
                     self._get_position(player_perspective, flipped)
 
-            for i, move in enumerate(self.valid_moves):
-                a, b = self.board.index_to_point(move)
+            for i, (a, b) in enumerate(self.valid_moves):
                 for player_perspective, flipped in itertools.product((0, 1), (False, True)):
                     a1, b1 = (a, b) if player_perspective == 0 else (b, a)
                     a2, b2 = (self.board.board_size - a1, self.board.board_size - b1) if flipped else (a1 + 1, b1 + 1)
@@ -77,7 +76,7 @@ class GameMaker:
     def _play_move(self, move_index, annotation=None):
         """Plays a move on the board, where the move is specified by its index in valid_moves"""
         move = self.valid_moves[move_index]
-        a, b = self.board.index_to_point(move)
+        a, b = move
 
         for player_perspective, flipped in itertools.product((0, 1), (False, True)):
             a1, b1 = (a, b) if player_perspective == 0 else (b, a)
@@ -89,7 +88,6 @@ class GameMaker:
         self.valid_moves[move_index] = self.valid_moves[-1]
         del self.valid_moves[-1]
         self.moves_played.append(((a, b), annotation))
-        # print(self.board)
 
     def update(self, win_logits, model_label):
         if self.game_phase == GamePhase.BEFORE_SWAP:

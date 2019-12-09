@@ -1,8 +1,8 @@
 import make_smart_games
 import make_dumb_games
 from training_data import make_training_data
-from board_utils import Board
-from utils import rb, board_size
+from board_utils import Board, Player
+from utils import board_size
 import numpy as np
 from model import create_model
 from collections import defaultdict
@@ -33,7 +33,7 @@ def show_game(red_model, blue_model, num_games = 1):
     for moves, winner, swapped in games:
         b = Board(board_size)
         for i, (move, annotation) in enumerate(moves):
-            b.update(rb[i % 2], b.point_to_index(move))
+            b.update(Player(i % 2), move)
             print(b)
             print(annotation)
             print("-------------------------------------")
