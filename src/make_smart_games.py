@@ -20,6 +20,12 @@ class GamePhase(Enum):
     FINISHED = 4
 
 
+def transform_coordinates(point, player_perspective, flip):
+    a, b = point
+    a1, b1 = (a, b) if player_perspective == 0 else (b, a)
+    return (board_size - a1, board_size - b1) if flip is True else (a1 + 1, b1 + 1)
+
+
 class GameMaker:
 
     def __init__(self, board_size, num_initial_moves, allow_swap):
@@ -66,28 +72,25 @@ class GameMaker:
                 hypothetical_positions[input_names[((self.current_player + player_perspective) % 2, flipped)]][slice_] = \
                     self._get_position(player_perspective, flipped)
 
-            for i, (a, b) in enumerate(self.valid_moves):
+            for i, move in enumerate(self.valid_moves):
                 for player_perspective, flipped in itertools.product((0, 1), (False, True)):
-                    a1, b1 = (a, b) if player_perspective == 0 else (b, a)
-                    a2, b2 = (self.board.board_size - a1, self.board.board_size - b1) if flipped else (a1 + 1, b1 + 1)
+                    a, b = transform_coordinates(move, player_perspective, flipped)
                     hypothetical_positions[input_names[((self.current_player + player_perspective) % 2, flipped)]] \
-                        [slice_][i, a2, b2, (self.current_player + player_perspective) % 2] = 1
+                        [slice_][i, a, b, (self.current_player + player_perspective) % 2] = 1
 
     def _play_move(self, move_index, annotation=None):
         """Plays a move on the board, where the move is specified by its index in valid_moves"""
         move = self.valid_moves[move_index]
-        a, b = move
 
         for player_perspective, flipped in itertools.product((0, 1), (False, True)):
-            a1, b1 = (a, b) if player_perspective == 0 else (b, a)
-            a2, b2 = (self.board.board_size - a1, self.board.board_size - b1) if flipped else (a1 + 1, b1 + 1)
-            self._get_position(player_perspective, flipped)[a2, b2, (self.current_player + player_perspective) % 2] = 1
+            a, b = transform_coordinates(move, player_perspective, flipped)
+            self._get_position(player_perspective, flipped)[a, b, (self.current_player + player_perspective) % 2] = 1
 
         self.board.update(Player(self.current_player), move)
         self.current_player = 1 - self.current_player
         self.valid_moves[move_index] = self.valid_moves[-1]
         del self.valid_moves[-1]
-        self.moves_played.append(((a, b), annotation))
+        self.moves_played.append((move, annotation))
 
     def update(self, win_logits, model_label):
         if self.game_phase == GamePhase.BEFORE_SWAP:
@@ -138,7 +141,7 @@ def make_games(model_a, model_b, games_required, num_initial_moves, batch_size=3
 
         for model, label in models:
             num_positions_required = sum(g.num_positions_required() for g in game_makers)
-            positions = dict((input_names[k],
+            hypothetical_positions = dict((input_names[k],
                               np.zeros([num_positions_required,
                                         board_size + 1,
                                         board_size + 1,
@@ -149,11 +152,11 @@ def make_games(model_a, model_b, games_required, num_initial_moves, batch_size=3
             position_counter = 0
 
             for g in game_makers:
-                g.fill_positions(positions,
+                g.fill_positions(hypothetical_positions,
                                  np.s_[position_counter: position_counter + g.num_positions_required()])
                 position_counter += g.num_positions_required()
 
-            win_logits = model.predict(positions)
+            win_logits = model.predict(hypothetical_positions)
 
             position_counter = 0
             for g in game_makers:
