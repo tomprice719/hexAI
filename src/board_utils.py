@@ -15,7 +15,7 @@ def opposite_player(player):
     return Player(1 - player.value)
 
 
-symbols = {(Player.RED, False): "o ", (Player.BLUE, True): "* ", "empty": ". ",
+symbols = {(Player.RED, False): "o ", (Player.BLUE, False): "* ", "empty": ". ",
            (Player.RED, True): "@ ", (Player.BLUE, True): "# "}
 
 

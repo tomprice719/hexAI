@@ -1,6 +1,8 @@
 import itertools
-from utils import board_size, input_names
+from utils import board_size, input_names, initial_position
 import numpy as np
+from board_utils import Board, Player
+from model import create_model
 
 
 def transform_coordinates(point, player_perspective, flip):
@@ -9,10 +11,17 @@ def transform_coordinates(point, player_perspective, flip):
     return (board_size - a1, board_size - b1) if flip is True else (a1 + 1, b1 + 1)
 
 
-def minimax_move(current_positions, current_player, model, valid_moves):
-    def _get_position(player_perspective, flipped):
-        return current_positions[(player_perspective, flipped)]
+def _get_position(positions, player_perspective, flipped):
+    return positions[(player_perspective, flipped)]
 
+
+def update_current_positions(positions, point, current_player):
+    for player_perspective, flipped in itertools.product((0, 1), (False, True)):
+        a, b = transform_coordinates(point, player_perspective, flipped)
+        _get_position(positions, player_perspective, flipped)[a, b, (current_player + player_perspective) % 2] = 1
+
+
+def minimax_move(current_positions, current_player, model, valid_moves):
     hypothetical_positions = dict((input_names[k],
                                    np.zeros([len(valid_moves) * (len(valid_moves) - 1),
                                              board_size + 1,
@@ -23,8 +32,8 @@ def minimax_move(current_positions, current_player, model, valid_moves):
 
     # initialize positions array
     for player_perspective, flipped in itertools.product((0, 1), (False, True)):
-        hypothetical_positions[input_names[((current_player + player_perspective + 1) % 2, flipped)]] = \
-            _get_position(player_perspective, flipped)
+        hypothetical_positions[input_names[((current_player + player_perspective + 1) % 2, flipped)]][:] = \
+            _get_position(current_positions, player_perspective, flipped)
     # add hypothetical moves
     move_pairs = [(move1, move2) for move1, move2 in itertools.product(valid_moves, valid_moves) if move1 != move2]
     for i, (move1, move2) in enumerate(move_pairs):
@@ -37,7 +46,7 @@ def minimax_move(current_positions, current_player, model, valid_moves):
                 [i, a2, b2, (current_player + player_perspective + 1) % 2] = 1
 
     # infer
-
+    print([len(x) for x in hypothetical_positions.values()])
     win_logits = model.predict(hypothetical_positions)
 
     # get best move via minimax
@@ -48,14 +57,42 @@ def minimax_move(current_positions, current_player, model, valid_moves):
         win_logits = win_logits[len(valid_moves) - 1:]
     assert len(win_logits) == 0
 
+    print(min(maximums))
+
     best_move = valid_moves[min(range(len(valid_moves)), key=lambda x: maximums[x])]
 
-    # update valid_moves, current position
-
-    valid_moves.remove(best_move)
-
-    for player_perspective, flipped in itertools.product((0, 1), (False, True)):
-        a, b = transform_coordinates(best_move, player_perspective, flipped)
-        _get_position(player_perspective, flipped)[a, b, (current_player + player_perspective) % 2] = 1
-
     return best_move
+
+
+def play(model):
+    board = Board(board_size)
+    valid_moves = list(board.all_points)
+    current_positions = dict()
+    for player_perspective, flipped in itertools.product((0, 1), (False, True)):
+        current_positions[(player_perspective, flipped)] = np.copy(initial_position)
+
+    print(board)
+
+    while board.winner is None:
+        move = eval(input())
+        valid_moves.remove(move)
+        update_current_positions(current_positions, move, 0)
+        board.update(Player(0), move)
+
+        print(board)
+
+        if board.winner is not None:
+            break
+
+        move = minimax_move(current_positions, 1, model, valid_moves)
+        valid_moves.remove(move)
+        update_current_positions(current_positions, move, 1)
+        board.update(Player(1), move)
+
+        print(board)
+
+
+model = create_model(depth=18, breadth=40, learning_rate=0.0001)
+model.load_weights('../data/better_model.h5')
+
+play(model)
