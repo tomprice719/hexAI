@@ -5,7 +5,6 @@ from board_utils import Board, Player
 from config import board_size
 import numpy as np
 from model import create_model
-from collections import defaultdict
 import itertools
 import time
 
@@ -19,13 +18,17 @@ num_initial_moves = 2
 
 
 def compare_models(model1, model2, num_games):
-    win_counter = defaultdict(int)
-    for game, winner, swapped in make_smart_games.make_games(model1, model2, num_games, num_initial_moves):
-        win_counter[(winner, swapped)] += 1
+    results = [(winner, swapped)
+               for game, winner, swapped
+               in make_smart_games.make_games(model1,
+                                              model2,
+                                              num_games,
+                                              num_initial_moves)]
     for winner, swapped in itertools.product(Player, (False, True)):
         print("winner: %d swapped: %d count: %d" %
-              (winner.name, swapped, win_counter[(winner, swapped)]))
-    print("win ratio %f" % ((win_counter[(Player.RED, False)] + win_counter[(Player.BLUE, True)]) / num_games))
+              (winner.name, swapped, results.count((winner, swapped))))
+    model1_wins = results.count((Player.RED, False)) + results.count((Player.BLUE, True))
+    print("win ratio %f" % (model1_wins / num_games))
 
 
 def show_game(red_model, blue_model, num_games=1):
