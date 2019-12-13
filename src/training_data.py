@@ -13,7 +13,7 @@ def _add_game(model_input, winners, move_numbers, moves, winner, num_initial_mov
         j = i - num_initial_moves
         if j >= 0:
             fill_model_input(model_input, position, Player(i % 2), starting_index + j)
-            winners[starting_index + j] = winner == i % 2
+            winners[starting_index + j] = winner == Player(i % 2)
             move_numbers[starting_index + j] = i + 1
 
 

@@ -22,13 +22,13 @@ def compare_models(model1, model2, num_games):
     win_counter = defaultdict(int)
     for game, winner, swapped in make_smart_games.make_games(model1, model2, num_games, num_initial_moves):
         win_counter[(winner, swapped)] += 1
-    for winner, swapped in itertools.product((0, 1), (0, 1)):
+    for winner, swapped in itertools.product(Player, (False, True)):
         print("winner: %d swapped: %d count: %d" %
-              (winner, swapped, win_counter[(winner, swapped)]))
-    print("win ratio %f" % ((win_counter[(0, 0)] + win_counter[(1, 1)]) / num_games))
+              (winner.name, swapped, win_counter[(winner, swapped)]))
+    print("win ratio %f" % ((win_counter[(Player.RED, False)] + win_counter[(Player.BLUE, True)]) / num_games))
 
 
-def show_game(red_model, blue_model, num_games = 1):
+def show_game(red_model, blue_model, num_games=1):
     games = make_smart_games.make_games(red_model, blue_model, num_games, num_initial_moves, batch_size=1)
     for moves, winner, swapped in games:
         b = Board(board_size)
@@ -39,31 +39,6 @@ def show_game(red_model, blue_model, num_games = 1):
             print("-------------------------------------")
         print("winner:", winner, "swapped:", swapped)
         print()
-
-
-# def train_from_selfplay(model, epoch_size, new_games_per_epoch, num_iterations, training_data):
-#     if training_data is not None:
-#         positions, winners = training_data
-#     else:
-#         positions, winners = make_training_data(model, 0, num_initial_moves)
-#
-#     for i in range(num_iterations):
-#         if i % 100 == 0:
-#             print(i)
-#         new_positions, new_winners = make_training_data(model, new_games_per_epoch, num_initial_moves)
-#         positions = np.append(new_positions, positions, axis=0)[:epoch_size]
-#         winners = np.append(new_winners, winners, axis=0)[:epoch_size]
-#
-#         model.fit(
-#             positions,
-#             winners,
-#             batch_size=64,
-#             epochs=1,
-#             shuffle=True,
-#             verbose=0
-#         )
-#
-#     return positions, winners
 
 
 def train_from_selfplay(model, new_games_per_epoch, num_iterations, use_weight=False):
@@ -111,7 +86,7 @@ def make_initial_training_data(num_games, filename):
 
 start_time = time.time()
 
-while (True):
+while True:
     print(time.time() - start_time)
     train_from_selfplay(model2, 10, 300, False)
     model2.save_weights('../data/model4.h5')

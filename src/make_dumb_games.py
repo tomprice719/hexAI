@@ -33,7 +33,7 @@ def make_game(board, starting_moves=(), index=None):
     already_played_set = set()
     already_played_list = []
     bridge_saving_moves = None
-    for i in range(board_size * board_size):
+    for i in range(len(board.all_points)):
         if i < len(starting_moves):
             next_move = starting_moves[i]
         else:
@@ -42,15 +42,16 @@ def make_game(board, starting_moves=(), index=None):
             if wm:
                 already_played_list.append(choice(wm))
                 already_played_list = [(move, None) for move in already_played_list]
-                return already_played_list, i % 2, None
-            # Otherwise, prevent an immediate win by the opponent
-            # or save a bridge, or play a random move, in that priority.
+                return already_played_list, Player(i % 2), None
+            # Otherwise, prevent an immediate win by the opponent if possible
             next_move = None
             wm = board.winning_moves(Player((i + 1) % 2))
             if wm:
                 next_move = choice(wm)
+            # Otherwise, save a bridge if possible
             if next_move is None and bridge_saving_moves:
                 next_move = choice(bridge_saving_moves)
+            # Otherwise, play a random move
             while next_move is None:
                 candidate_move = random_moves.pop()
                 if candidate_move not in already_played_set:

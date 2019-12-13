@@ -41,7 +41,7 @@ class GameMaker:
         return self.board.winner is not None
 
     def game(self):
-        return self.moves_played, self.board.winner.value, self.swapped
+        return self.moves_played, self.board.winner, self.swapped
 
     def refresh(self):
         self.board.refresh()
@@ -98,9 +98,9 @@ class GameMaker:
             best_move_logits = float(win_logits[best_move_index])
             if best_move_logits > 0.5:
                 self._play_move(best_move_index, (model_label, best_move_logits, sigmoid(best_move_logits)))
-                self.swapped = 0
+                self.swapped = False
             else:
-                self.swapped = 1
+                self.swapped = True
             self.game_phase = GamePhase.AFTER_SWAP
             return
         if self.game_phase == GamePhase.AFTER_SWAP:
