@@ -1,53 +1,32 @@
-import itertools
-from utils import board_size, input_names, initial_position
+from config import board_size
 import numpy as np
-from board_utils import Board, Player
+from board_utils import Board, Player, opposite_player
 from model import create_model
+from position_utils import create_position, update_position, \
+    initialize_model_input, fill_model_input, update_model_input
 
 
-def transform_coordinates(point, player_perspective, flip):
-    a, b = point
-    a1, b1 = (a, b) if player_perspective == 0 else (b, a)
-    return (board_size - a1, board_size - b1) if flip is True else (a1 + 1, b1 + 1)
+def minimax_move(position, current_player, model, valid_moves):
+    model_input = initialize_model_input(len(valid_moves) * (len(valid_moves) - 1))
 
+    fill_model_input(model_input, position, opposite_player(current_player), np.s_[:])
 
-def _get_position(positions, player_perspective, flipped):
-    return positions[(player_perspective, flipped)]
+    for i, move in enumerate(valid_moves):
+        responses = [response for response in valid_moves if response != move]
+        slice_ = np.s_[i * len(responses): (i + 1) * len(responses)]
+        update_model_input(model_input,
+                           [move] * len(responses),
+                           current_player,
+                           opposite_player(current_player),
+                           slice_)
+        update_model_input(model_input,
+                           responses,
+                           opposite_player(current_player),
+                           opposite_player(current_player),
+                           slice_)
 
-
-def update_current_positions(positions, point, current_player):
-    for player_perspective, flipped in itertools.product((0, 1), (False, True)):
-        a, b = transform_coordinates(point, player_perspective, flipped)
-        _get_position(positions, player_perspective, flipped)[a, b, (current_player + player_perspective) % 2] = 1
-
-
-def minimax_move(current_positions, current_player, model, valid_moves):
-    hypothetical_positions = dict((input_names[k],
-                                   np.zeros([len(valid_moves) * (len(valid_moves) - 1),
-                                             board_size + 1,
-                                             board_size + 1,
-                                             2],
-                                            dtype="float32"))
-                                  for k in itertools.product((0, 1), (False, True)))
-
-    # initialize positions array
-    for player_perspective, flipped in itertools.product((0, 1), (False, True)):
-        hypothetical_positions[input_names[((current_player + player_perspective + 1) % 2, flipped)]][:] = \
-            _get_position(current_positions, player_perspective, flipped)
-    # add hypothetical moves
-    move_pairs = [(move1, move2) for move1, move2 in itertools.product(valid_moves, valid_moves) if move1 != move2]
-    for i, (move1, move2) in enumerate(move_pairs):
-        for player_perspective, flipped in itertools.product((0, 1), (False, True)):
-            a1, b1 = transform_coordinates(move1, player_perspective, flipped)
-            a2, b2 = transform_coordinates(move2, player_perspective, flipped)
-            hypothetical_positions[input_names[((current_player + player_perspective + 1) % 2, flipped)]] \
-                [i, a1, b1, (current_player + player_perspective) % 2] = 1
-            hypothetical_positions[input_names[((current_player + player_perspective + 1) % 2, flipped)]] \
-                [i, a2, b2, (current_player + player_perspective + 1) % 2] = 1
-
-    # infer
-    print([len(x) for x in hypothetical_positions.values()])
-    win_logits = model.predict(hypothetical_positions)
+    print([len(x) for x in model_input.values()])
+    win_logits = model.predict(model_input)
 
     # get best move via minimax
 
@@ -67,27 +46,25 @@ def minimax_move(current_positions, current_player, model, valid_moves):
 def play(model):
     board = Board(board_size)
     valid_moves = list(board.all_points)
-    current_positions = dict()
-    for player_perspective, flipped in itertools.product((0, 1), (False, True)):
-        current_positions[(player_perspective, flipped)] = np.copy(initial_position)
+    position = create_position()
 
     print(board)
 
     while board.winner is None:
         move = eval(input())
         valid_moves.remove(move)
-        update_current_positions(current_positions, move, 0)
-        board.update(Player(0), move)
+        update_position(position, Player.RED, move)
+        board.update(Player.RED, move)
 
         print(board)
 
         if board.winner is not None:
             break
 
-        move = minimax_move(current_positions, 1, model, valid_moves)
+        move = minimax_move(position, Player.BLUE, model, valid_moves)
         valid_moves.remove(move)
-        update_current_positions(current_positions, move, 1)
-        board.update(Player(1), move)
+        update_position(position, Player.BLUE, move)
+        board.update(Player.BLUE, move)
 
         print(board)
 

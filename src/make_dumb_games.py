@@ -1,5 +1,5 @@
 from board_utils import Board, neighbour_difference, Player, opposite_player
-from utils import board_size
+from config import board_size
 from random import shuffle, choice
 
 

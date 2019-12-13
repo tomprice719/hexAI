@@ -2,7 +2,7 @@ import make_smart_games
 import make_dumb_games
 from training_data import make_training_data
 from board_utils import Board, Player
-from utils import board_size
+from config import board_size
 import numpy as np
 from model import create_model
 from collections import defaultdict

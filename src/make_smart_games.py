@@ -1,12 +1,13 @@
 # Generates games by choosing moves with maximum win probability according to a trained model
 
 import numpy as np
-from utils import input_names, board_size, initial_position
-import itertools
-from board_utils import Board, Player
+from config import board_size
+from board_utils import Board, Player, opposite_player
 from random import randint
 from enum import Enum
 import math
+from position_utils import create_position, refresh_position, update_position, \
+    initialize_model_input, fill_model_input, update_model_input
 
 
 def sigmoid(x):
@@ -20,25 +21,15 @@ class GamePhase(Enum):
     FINISHED = 4
 
 
-def transform_coordinates(point, player_perspective, flip):
-    a, b = point
-    a1, b1 = (a, b) if player_perspective == 0 else (b, a)
-    return (board_size - a1, board_size - b1) if flip is True else (a1 + 1, b1 + 1)
-
-
 class GameMaker:
 
     def __init__(self, board_size, num_initial_moves, allow_swap):
         self.board = Board(board_size)
-        self.current_positions = dict()
+        self.position = dict()
         self.allow_swap = allow_swap
-        for player_perspective, flipped in itertools.product((0, 1), (False, True)):
-            self.current_positions[(player_perspective, flipped)] = np.copy(initial_position)
+        self.position = create_position()
         self.num_initial_moves = num_initial_moves
         self.refresh()
-
-    def _get_position(self, player_perspective, flipped):
-        return self.current_positions[(player_perspective, flipped)]
 
     def num_positions_required(self):
         if self.game_phase == GamePhase.FINISHED:
@@ -54,40 +45,38 @@ class GameMaker:
 
     def refresh(self):
         self.board.refresh()
-        self.current_player = 0
+        self.current_player = Player.RED
         self.moves_played = []
         self.valid_moves = list(self.board.all_points)
-        for player_perspective, flipped in itertools.product((0, 1), (False, True)):
-            np.copyto(self._get_position(player_perspective, flipped), initial_position)
+        refresh_position(self.position)
         for i in range(self.num_initial_moves):
             self._play_move(randint(0, len(self.valid_moves) - 1))
         self.game_phase = GamePhase.BEFORE_SWAP
         self.swapped = None
 
-    def fill_positions(self, hypothetical_positions, slice_):
+    def fill_model_input(self, model_input, slice_):
         if self.game_phase == GamePhase.FINISHED:
             return
         else:
-            for player_perspective, flipped in itertools.product((0, 1), (False, True)):
-                hypothetical_positions[input_names[((self.current_player + player_perspective) % 2, flipped)]][slice_] = \
-                    self._get_position(player_perspective, flipped)
-
-            for i, move in enumerate(self.valid_moves):
-                for player_perspective, flipped in itertools.product((0, 1), (False, True)):
-                    a, b = transform_coordinates(move, player_perspective, flipped)
-                    hypothetical_positions[input_names[((self.current_player + player_perspective) % 2, flipped)]] \
-                        [slice_][i, a, b, (self.current_player + player_perspective) % 2] = 1
+            fill_model_input(model_input,
+                             self.position,
+                             self.current_player,
+                             slice_)
+            update_model_input(model_input,
+                               self.valid_moves,
+                               self.current_player,
+                               self.current_player,
+                               slice_
+                               )
 
     def _play_move(self, move_index, annotation=None):
         """Plays a move on the board, where the move is specified by its index in valid_moves"""
         move = self.valid_moves[move_index]
 
-        for player_perspective, flipped in itertools.product((0, 1), (False, True)):
-            a, b = transform_coordinates(move, player_perspective, flipped)
-            self._get_position(player_perspective, flipped)[a, b, (self.current_player + player_perspective) % 2] = 1
+        update_position(self.position, self.current_player, move)
 
         self.board.update(Player(self.current_player), move)
-        self.current_player = 1 - self.current_player
+        self.current_player = opposite_player(self.current_player)
         self.valid_moves[move_index] = self.valid_moves[-1]
         del self.valid_moves[-1]
         self.moves_played.append((move, annotation))
@@ -140,23 +129,16 @@ def make_games(model_a, model_b, games_required, num_initial_moves, batch_size=3
     while game_makers:
 
         for model, label in models:
-            num_positions_required = sum(g.num_positions_required() for g in game_makers)
-            hypothetical_positions = dict((input_names[k],
-                              np.zeros([num_positions_required,
-                                        board_size + 1,
-                                        board_size + 1,
-                                        2],
-                                       dtype="float32"))
-                             for k in itertools.product((0, 1), (False, True)))
+            model_input = initialize_model_input(sum(g.num_positions_required() for g in game_makers))
 
             position_counter = 0
 
             for g in game_makers:
-                g.fill_positions(hypothetical_positions,
+                g.fill_model_input(model_input,
                                  np.s_[position_counter: position_counter + g.num_positions_required()])
                 position_counter += g.num_positions_required()
 
-            win_logits = model.predict(hypothetical_positions)
+            win_logits = model.predict(model_input)
 
             position_counter = 0
             for g in game_makers:
