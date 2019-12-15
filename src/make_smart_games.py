@@ -96,7 +96,7 @@ class GameMaker:
             best_move_index = max(range(len(self.valid_moves)),
                                   key=lambda x: win_logits[x])
             best_move_logits = float(win_logits[best_move_index])
-            if best_move_logits > 0.5:
+            if best_move_logits > 0:
                 self._play_move(best_move_index, (model_label, best_move_logits, sigmoid(best_move_logits)))
                 self.swapped = False
             else:

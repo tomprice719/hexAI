@@ -69,7 +69,7 @@ def play_with_swap(model):
         if board.winner is not None:
             break
 
-        if may_swap is True and opening_win_logits[str(move)] > 0.5:
+        if may_swap is True and opening_win_logits[str(move)] > 0:
             print("SWAPPED. You are now blue. It is your turn again.")
         else:
             move, win_logit = minimax_move(position, current_player, model, valid_moves)
@@ -108,4 +108,5 @@ def play(model):
         print(board)
 
 
-play(get_main_model())
+if __name__ == "__main__":
+    play(get_main_model())

@@ -48,7 +48,13 @@ def train_from_selfplay(model, new_games_per_epoch, num_iterations, use_weight=F
     for i in range(num_iterations):
         if i % 10 == 0:
             print(i)
-        games = make_smart_games.make_games(model, model, new_games_per_epoch, num_initial_moves)
+        games = make_smart_games.make_games(
+            model,
+            model,
+            new_games_per_epoch,
+            num_initial_moves,
+            allow_swap=False
+        )
         assert len(games) == new_games_per_epoch
         positions, winners, move_numbers = make_training_data(games, num_initial_moves)
 
