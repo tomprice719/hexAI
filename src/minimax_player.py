@@ -4,6 +4,7 @@ from board_utils import Board, Player, opposite_player
 from model import create_model
 from position_utils import create_position, update_position, \
     initialize_model_input, fill_model_input, update_model_input
+import itertools
 
 
 def minimax_move(position, current_player, model, valid_moves):
@@ -11,19 +12,19 @@ def minimax_move(position, current_player, model, valid_moves):
 
     fill_model_input(model_input, position, opposite_player(current_player), np.s_[:])
 
-    for i, move in enumerate(valid_moves):
-        responses = [response for response in valid_moves if response != move]
-        slice_ = np.s_[i * len(responses): (i + 1) * len(responses)]
-        update_model_input(model_input,
-                           [move] * len(responses),
-                           current_player,
-                           opposite_player(current_player),
-                           slice_)
-        update_model_input(model_input,
-                           responses,
-                           opposite_player(current_player),
-                           opposite_player(current_player),
-                           slice_)
+    moves = [(move1, move2) for move1, move2 in itertools.product(valid_moves, valid_moves) if move1 != move2]
+
+    update_model_input(model_input,
+                       [move1 for move1, move2 in moves],
+                       current_player,
+                       opposite_player(current_player),
+                       np.s_[:])
+
+    update_model_input(model_input,
+                       [move2 for move1, move2 in moves],
+                       opposite_player(current_player),
+                       opposite_player(current_player),
+                       np.s_[:])
 
     print([len(x) for x in model_input.values()])
     win_logits = model.predict(model_input)
@@ -38,9 +39,9 @@ def minimax_move(position, current_player, model, valid_moves):
 
     print(min(maximums))
 
-    best_move = valid_moves[min(range(len(valid_moves)), key=lambda x: maximums[x])]
+    best_response = valid_moves[min(range(len(valid_moves)), key=lambda x: maximums[x])]
 
-    return best_move
+    return best_response, -min(maximums)
 
 
 def play(model):
@@ -61,7 +62,7 @@ def play(model):
         if board.winner is not None:
             break
 
-        move = minimax_move(position, Player.BLUE, model, valid_moves)
+        move, win_logit = minimax_move(position, Player.BLUE, model, valid_moves)
         valid_moves.remove(move)
         update_position(position, Player.BLUE, move)
         board.update(Player.BLUE, move)
