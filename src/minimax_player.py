@@ -5,6 +5,7 @@ from model import create_model
 from position_utils import create_position, update_position, \
     initialize_model_input, fill_model_input, update_model_input
 import itertools
+import yaml
 
 
 def minimax_move(position, current_player, model, valid_moves):
@@ -42,6 +43,43 @@ def minimax_move(position, current_player, model, valid_moves):
     best_response = valid_moves[min(range(len(valid_moves)), key=lambda x: maximums[x])]
 
     return best_response, -min(maximums)
+
+
+def play_with_swap(model):
+    board = Board(board_size)
+    valid_moves = list(board.all_points)
+    position = create_position()
+
+    with open('../data/opening_win_logits.yaml', 'r') as f:
+        opening_win_logits = yaml.load(f)
+
+    may_swap = True
+    current_player = Player.RED
+
+    print(board)
+
+    while board.winner is None:
+        move = eval(input())
+        valid_moves.remove(move)
+        update_position(position, current_player, move)
+        board.update(current_player, move)
+        current_player = opposite_player(current_player)
+        print(board)
+
+        if board.winner is not None:
+            break
+
+        if may_swap is True and opening_win_logits[str(move)] > 0.5:
+            print("SWAPPED. You are now blue. It is your turn again.")
+        else:
+            move, win_logit = minimax_move(position, current_player, model, valid_moves)
+            valid_moves.remove(move)
+            update_position(position, current_player, move)
+            board.update(current_player, move)
+            current_player = opposite_player(current_player)
+            print(board)
+
+        may_swap = False
 
 
 def play(model):
