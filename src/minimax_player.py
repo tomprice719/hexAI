@@ -109,4 +109,4 @@ def play(model):
 
 
 if __name__ == "__main__":
-    play(get_main_model())
+    play_with_swap(get_main_model())
