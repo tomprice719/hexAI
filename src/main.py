@@ -8,11 +8,11 @@ from model import create_model
 import itertools
 import time
 
-model1 = create_model(depth=18, breadth=40)
-model1.load_weights('../data/model2.h5')
-
-model2 = create_model(depth=18, breadth=40, learning_rate=0.0001)
-model2.load_weights('../data/model3.h5')
+# model1 = create_model(depth=18, breadth=40)
+# model1.load_weights('../data/model2.h5')
+#
+# model2 = create_model(depth=18, breadth=40, learning_rate=0.0001)
+# model2.load_weights('../data/model3.h5')
 
 num_initial_moves = 2
 
@@ -25,7 +25,7 @@ def compare_models(model1, model2, num_games):
                                               num_games,
                                               num_initial_moves)]
     for winner, swapped in itertools.product(Player, (False, True)):
-        print("winner: %d swapped: %d count: %d" %
+        print("winner: %s swapped: %s count: %d" %
               (winner.name, swapped, results.count((winner, swapped))))
     model1_wins = results.count((Player.RED, False)) + results.count((Player.BLUE, True))
     print("win ratio %f" % (model1_wins / num_games))
@@ -81,21 +81,32 @@ def make_initial_training_data(num_games, filename):
     make_training_data(games, 0, filename)
 
 
-# make_initial_training_data(30000, "games1.npz")
-
-# train_from_file(model1, "games1.npz", 1)
-# model1.save_weights('../data/model1.h5')
-
+model1 = create_model(depth=5, breadth=20)
+model1.load_weights("../data/model3.h5")
+compare_models(model1, model1, 100)
 
 start_time = time.time()
 
 while True:
     print(time.time() - start_time)
-    train_from_selfplay(model2, 10, 300, False)
-    model2.save_weights('../data/model4.h5')
-    show_game(model2, model2)
-    compare_models(model2, model2, 100)
-    print("-")
-    compare_models(model1, model2, 100)
-    print("-")
-    compare_models(model2, model1, 100)
+    train_from_selfplay(model1, 10, 300, False)
+    model1.save_weights('../data/model3.h5')
+    show_game(model1, model1)
+    compare_models(model1, model1, 100)
+
+# train_from_file(model1, "games1.npz", 1)
+# model1.save_weights('../data/model1.h5')
+
+
+# start_time = time.time()
+#
+# while True:
+#     print(time.time() - start_time)
+#     train_from_selfplay(model2, 10, 300, False)
+#     model2.save_weights('../data/model4.h5')
+#     show_game(model2, model2)
+#     compare_models(model2, model2, 100)
+#     print("-")
+#     compare_models(model1, model2, 100)
+#     print("-")
+#     compare_models(model2, model1, 100)

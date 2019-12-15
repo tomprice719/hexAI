@@ -109,9 +109,9 @@ class Board:
 
     def winning_moves(self, player):
         if player == Player.RED:
-            return self._top_boundary.intersection(self._bottom_boundary)
+            return list(self._top_boundary.intersection(self._bottom_boundary))
         if player == Player.BLUE:
-            return self._left_boundary.intersection(self._right_boundary)
+            return list(self._left_boundary.intersection(self._right_boundary))
         raise Exception("Player must be an element of the Player enum.")
 
     def _update_sets(self, player, move_point):

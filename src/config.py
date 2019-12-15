@@ -1,1 +1,1 @@
-board_size = 9
+board_size = 5

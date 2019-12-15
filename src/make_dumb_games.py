@@ -8,8 +8,8 @@ def get_bridge_saving_moves(board, player, move):
         a1, b1 = point
         if b1 < 0 or b1 >= board_size or board.has_hex(Player.RED, point):
             return Player.RED
-        if a1 < 0 or a1 >= board_size or board.has_hex(Player.Blue, point):
-            return Player.Blue
+        if a1 < 0 or a1 >= board_size or board.has_hex(Player.BLUE, point):
+            return Player.BLUE
         return None
 
     a, b = move
