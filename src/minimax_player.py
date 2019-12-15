@@ -1,7 +1,7 @@
 from config import board_size
 import numpy as np
 from board_utils import Board, Player, opposite_player
-from model import create_model
+from model import get_main_model
 from position_utils import create_position, update_position, \
     initialize_model_input, fill_model_input, update_model_input
 import itertools
@@ -108,7 +108,4 @@ def play(model):
         print(board)
 
 
-model = create_model(depth=18, breadth=40, learning_rate=0.0001)
-model.load_weights('../data/better_model.h5')
-
-play(model)
+play(get_main_model())

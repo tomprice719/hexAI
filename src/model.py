@@ -66,3 +66,9 @@ def create_model2(depth=5, breadth=40, breadth2=40, learning_rate=0.001):
         metrics=[BinaryAccuracy(threshold=0.0)]
     )
     return model
+
+
+def get_main_model():
+    model = create_model(depth=18, breadth=40, learning_rate=0.0001)
+    model.load_weights('../data/better_model.h5')
+    return model
