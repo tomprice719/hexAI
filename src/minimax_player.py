@@ -6,6 +6,7 @@ from position_utils import create_position, update_position, \
     initialize_model_input, fill_model_input, update_model_input
 import itertools
 import yaml
+from string import ascii_uppercase
 
 
 def minimax_move(position, current_player, model, valid_moves):
@@ -44,6 +45,20 @@ def minimax_move(position, current_player, model, valid_moves):
 
     return best_response, -min(maximums)
 
+def get_move(valid_moves):
+    while True:
+        try:
+            input_ = input().strip().upper()
+            if len(input_) < 2:
+                raise ValueError("Invalid move.")
+            a = ascii_uppercase.index(input_[0])
+            b = int(input_[1:]) - 1
+            if (a, b) not in valid_moves:
+                raise ValueError
+            return a, b
+        except ValueError:
+            print("Invalid move.")
+
 
 def play_with_swap(model):
     board = Board(board_size)
@@ -59,7 +74,7 @@ def play_with_swap(model):
     print(board)
 
     while board.winner is None:
-        move = eval(input())
+        move = get_move(valid_moves)
         valid_moves.remove(move)
         update_position(position, current_player, move)
         board.update(current_player, move)
@@ -90,7 +105,7 @@ def play(model):
     print(board)
 
     while board.winner is None:
-        move = eval(input())
+        move = get_move(valid_moves)
         valid_moves.remove(move)
         update_position(position, Player.RED, move)
         board.update(Player.RED, move)

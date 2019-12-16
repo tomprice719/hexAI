@@ -1,6 +1,7 @@
 from enum import Enum
 import itertools
-
+from colorama import Fore, Back, Style
+from string import ascii_uppercase
 neighbour_difference = [(-1, 0), (-1, 1), (0, 1), (1, 0), (1, -1), (0, -1)]
 
 
@@ -10,13 +11,14 @@ class Player(Enum):
 
 
 def opposite_player(player):
-    if player not in Player:
-        raise Exception("player must be element of Player enum")
     return Player(1 - player.value)
 
 
-symbols = {(Player.RED, False): "o ", (Player.BLUE, False): "* ", "empty": ". ",
-           (Player.RED, True): "@ ", (Player.BLUE, True): "# "}
+symbols = {(Player.RED, False): Fore.LIGHTRED_EX + u"\u25CF " + Style.RESET_ALL,
+           (Player.BLUE, False): Fore.LIGHTBLUE_EX + u"\u25CF " + Style.RESET_ALL,
+           "empty": Fore.WHITE + u"\u25CF " + Style.RESET_ALL,
+           (Player.RED, True): Fore.LIGHTRED_EX + u"\u25C9 " + Style.RESET_ALL,
+           (Player.BLUE, True): Fore.LIGHTBLUE_EX + u"\u25C9 " + Style.RESET_ALL}
 
 
 class Board:
@@ -155,9 +157,11 @@ class Board:
         print(self.to_string(self._right_boundary))
 
     def __repr__(self):
-        rep = ""
+        rep = "   " + Back.RED + Fore.WHITE \
+              + "".join(["%s " % c for c in ascii_uppercase[:self.board_size]]) \
+              + Style.RESET_ALL + "\n"
         for i in range(self.board_size):
-            rep += " " * i
+            rep += " " * i + Back.BLUE + Fore.WHITE + "%d " % (i + 1) + Style.RESET_ALL + " "
             for j in range(self.board_size):
                 symbol = symbols["empty"]
                 for player in Player:
@@ -165,5 +169,6 @@ class Board:
                         new = (j, i) == self._last_move
                         symbol = symbols[(player, new)]
                 rep += symbol
-            rep += "\n"
+            rep += Back.BLUE + "  " + Style.RESET_ALL + "\n"
+        rep += " " * (self.board_size + 2) + Back.RED + " " * self.board_size * 2 + Style.RESET_ALL
         return rep
