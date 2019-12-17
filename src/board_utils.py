@@ -59,23 +59,6 @@ class Board:
     def has_hex(self, player, point):
         return point in self._hexes[player]
 
-    def refresh(self):
-        for p in Player:
-            self._hexes[p].clear()
-        self._top_connected.clear()
-        self._top_boundary.clear()
-        self._top_boundary.update(self._top)
-        self._bottom_connected.clear()
-        self._bottom_boundary.clear()
-        self._bottom_boundary.update(self._bottom)
-        self._left_connected.clear()
-        self._left_boundary.clear()
-        self._left_boundary.update(self._left)
-        self._right_connected.clear()
-        self._right_boundary.clear()
-        self._right_boundary.update(self._right)
-        self.winner = None
-
     def _starting_side(self, player, point):
         i, j = point
         k = (j if player == Player.RED else i)
@@ -133,28 +116,27 @@ class Board:
                          self._right_boundary]:
             boundary.discard(move_point)
 
-    def to_string(self, set_):
-        rep = ""
-        for i in range(self.board_size):
-            rep += " " * i
-            for j in range(self.board_size):
-                symbol = " ."
-                if (j, i) in set_:
-                    symbol = " x"
-                rep += symbol
-            rep += "\n"
-        rep += "---------------------------------------------------------------"
-        return rep
-
-    def print_stuff(self):
-        print(self.to_string(self._top_connected))
-        print(self.to_string(self._bottom_connected))
-        print(self.to_string(self._left_connected))
-        print(self.to_string(self._right_connected))
-        print(self.to_string(self._top_boundary))
-        print(self.to_string(self._bottom_boundary))
-        print(self.to_string(self._left_boundary))
-        print(self.to_string(self._right_boundary))
+    def print_debug_data(self):
+        def print_points(set_, label):
+            s = label + "\n"
+            for i in range(self.board_size):
+                s += " " * i
+                for j in range(self.board_size):
+                    symbol = " ."
+                    if (j, i) in set_:
+                        symbol = " x"
+                    s += symbol
+                s += "\n"
+            s += "------------------------------------"
+            print(s)
+        print_points(self._top_connected, "top connected")
+        print_points(self._bottom_connected, "bottom connected")
+        print_points(self._left_connected, "left connected")
+        print_points(self._right_connected, "right connected")
+        print_points(self._top_boundary, "top boundary")
+        print_points(self._bottom_boundary, "bottom boundary")
+        print_points(self._left_boundary, "left boundary")
+        print_points(self._right_boundary, "right boundary")
 
     def __repr__(self):
         rep = "   " + Back.RED + Fore.WHITE \

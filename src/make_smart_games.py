@@ -6,7 +6,7 @@ from board_utils import Board, Player, opposite_player
 from random import randint
 from enum import Enum
 import math
-from position_utils import create_position, refresh_position, update_position, \
+from position_utils import create_position, update_position, \
     initialize_model_input, fill_model_input, update_model_input
 
 
@@ -28,8 +28,13 @@ class GameMaker:
         self.position = dict()
         self.allow_swap = allow_swap
         self.position = create_position()
-        self.num_initial_moves = num_initial_moves
-        self.refresh()
+        self.current_player = Player.RED
+        self.moves_played = []
+        self.valid_moves = list(self.board.all_points)
+        self.game_phase = GamePhase.BEFORE_SWAP
+        self.swapped = None
+        for i in range(num_initial_moves):
+            self._play_move(randint(0, len(self.valid_moves) - 1))
 
     def num_positions_required(self):
         if self.game_phase == GamePhase.FINISHED:
@@ -42,17 +47,6 @@ class GameMaker:
 
     def game(self):
         return self.moves_played, self.board.winner, self.swapped
-
-    def refresh(self):
-        self.board.refresh()
-        self.current_player = Player.RED
-        self.moves_played = []
-        self.valid_moves = list(self.board.all_points)
-        refresh_position(self.position)
-        for i in range(self.num_initial_moves):
-            self._play_move(randint(0, len(self.valid_moves) - 1))
-        self.game_phase = GamePhase.BEFORE_SWAP
-        self.swapped = None
 
     def fill_model_input(self, model_input, slice_):
         if self.game_phase == GamePhase.FINISHED:
@@ -146,14 +140,13 @@ def make_games(model_a, model_b, games_required, num_initial_moves, batch_size=3
                 g.update(win_logits[position_counter: position_counter + num_positions_required], label)
                 position_counter += num_positions_required
 
-        finished_game_makers = [g for g in game_makers if g.finished()]
+        games += [g.game() for g in game_makers if g.finished()]
         game_makers = [g for g in game_makers if not g.finished()]
-        games += [g.game() for g in finished_game_makers]
         new_games_required = games_required - len(games) - len(game_makers)
         assert new_games_required >= 0
-        finished_game_makers = finished_game_makers[:new_games_required]
-        for g in finished_game_makers:
-            g.refresh()
-        game_makers += finished_game_makers
+        game_makers += [GameMaker(board_size, num_initial_moves, allow_swap)
+                        for _ in range(min(new_games_required, batch_size - len(game_makers)))]
+
+    assert(len(games) == games_required)
 
     return games

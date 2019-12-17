@@ -23,11 +23,6 @@ def create_position():
     return dict((k, np.copy(initial_quarter_position)) for k in itertools.product((0, 1), (False, True)))
 
 
-def refresh_position(position):
-    for player_perspective, flipped in itertools.product((0, 1), (False, True)):
-        position[(player_perspective, flipped)] = np.copy(initial_quarter_position)
-
-
 def update_position(position, player, move):
     player = player.value
     for player_perspective, flipped in itertools.product((0, 1), (False, True)):
