@@ -58,6 +58,7 @@ def minimax_move(position, current_player, model, valid_moves, breadth=10):
 
     return best_response, one_ply_logits[best_response_index]
 
+
 def get_move(valid_moves):
     while True:
         try:
@@ -71,6 +72,43 @@ def get_move(valid_moves):
             return a, b
         except ValueError:
             print("Invalid move.")
+
+
+def play_auto(model):
+    board = Board(board_size)
+    valid_moves = list(board.all_points)
+    position = create_position()
+
+    print(board)
+
+    move = get_move(valid_moves)
+    valid_moves.remove(move)
+    update_position(position, Player.RED, move)
+    board.update(Player.RED, move)
+
+    print(board)
+
+    while board.winner is None:
+
+        move, win_logit = minimax_move(position, Player.BLUE, model, valid_moves)
+        valid_moves.remove(move)
+        update_position(position, Player.BLUE, move)
+        board.update(Player.BLUE, move)
+
+        print(board)
+
+        if board.winner is not None:
+            break
+
+        move, win_logit = minimax_move(position, Player.RED, model, valid_moves)
+        valid_moves.remove(move)
+        update_position(position, Player.RED, move)
+        board.update(Player.RED, move)
+
+        print(board)
+
+        if board.winner is not None:
+            break
 
 
 def play_with_swap(model):
