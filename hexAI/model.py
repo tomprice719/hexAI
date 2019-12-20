@@ -6,8 +6,8 @@ from keras.optimizers import Adam
 from keras.losses import BinaryCrossentropy
 from keras.metrics import BinaryAccuracy
 import itertools
-from config import board_size, main_model_args, main_model_location
-from position_utils import input_names
+from .config import board_size, main_model_args, main_model_location
+from .position_utils import input_names
 
 
 def create_model(depth=5, breadth=20, learning_rate=0.001):

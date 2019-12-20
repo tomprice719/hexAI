@@ -1,5 +1,5 @@
 import numpy as np
-from config import board_size
+from .config import board_size
 import itertools
 
 initial_quarter_position = np.zeros((board_size + 1, board_size + 1, 2), dtype="float32")

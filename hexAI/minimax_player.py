@@ -1,8 +1,8 @@
-from config import board_size
+from .config import board_size
 import numpy as np
-from board_utils import Board, Player, opposite_player
-from model import get_main_model
-from position_utils import create_position, update_position, \
+from .board_utils import Board, Player, opposite_player
+from .model import get_main_model
+from .position_utils import create_position, update_position, \
     initialize_model_input, fill_model_input, update_model_input
 import itertools
 import yaml

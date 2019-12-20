@@ -1,9 +1,9 @@
 if __name__ == "__main__":
-    from config import board_size
-    from board_utils import Board, Player
-    from model import get_main_model
-    from position_utils import create_position, update_position
-    from minimax_player import minimax_move
+    from .config import board_size
+    from .board_utils import Board, Player
+    from .model import get_main_model
+    from .position_utils import create_position, update_position
+    from .minimax_player import minimax_move
     import yaml
 
     board = Board(board_size)

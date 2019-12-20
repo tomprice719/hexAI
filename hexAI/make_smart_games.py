@@ -1,12 +1,12 @@
 # Generates games by choosing moves with maximum win probability according to a trained model
 
 import numpy as np
-from config import board_size
-from board_utils import Board, Player, opposite_player
+from .config import board_size
+from .board_utils import Board, Player, opposite_player
 from random import randint
 from enum import Enum
 import math
-from position_utils import create_position, update_position, \
+from .position_utils import create_position, update_position, \
     initialize_model_input, fill_model_input, update_model_input
 
 

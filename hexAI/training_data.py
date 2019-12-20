@@ -1,6 +1,6 @@
 import numpy as np
-from board_utils import Player
-from position_utils import create_position, update_position, initialize_model_input, fill_model_input
+from .board_utils import Player
+from .position_utils import create_position, update_position, initialize_model_input, fill_model_input
 
 
 def _add_game(model_input, winners, move_numbers, moves, winner, num_initial_moves, starting_index):
