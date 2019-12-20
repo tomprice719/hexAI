@@ -18,5 +18,5 @@ if __name__ == "__main__":
         opening_win_logits[str(move)] = float(-minimax_move(board, Player.BLUE, model, valid_moves)[1])
         print(move, opening_win_logits[(str(move))])
 
-    with open('../data/opening_win_logits.yaml', 'w') as f:
+    with open('data/opening_win_logits.yaml', 'w') as f:
         yaml.dump(opening_win_logits, f)

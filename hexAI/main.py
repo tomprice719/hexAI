@@ -9,10 +9,10 @@ import itertools
 import time
 
 # model1 = create_model(depth=18, breadth=40)
-# model1.load_weights('../data/model2.h5')
+# model1.load_weights('data/model2.h5')
 #
 # model2 = create_model(depth=18, breadth=40, learning_rate=0.0001)
-# model2.load_weights('../data/model3.h5')
+# model2.load_weights('data/model3.h5')
 
 num_initial_moves = 2
 
@@ -73,7 +73,7 @@ def train_from_selfplay(model, new_games_per_epoch, num_iterations, use_weight=F
 
 
 def train_from_file(model, filename, num_epochs):
-    data = dict(np.load("../data/%s" % filename))
+    data = dict(np.load("data/%s" % filename))
 
     model.fit(
         data,
@@ -91,7 +91,7 @@ def make_initial_training_data(num_games, filename = None):
 
 
 # model1 = create_model(depth=5, breadth=20)
-# model1.load_weights("../data/model3.h5")
+# model1.load_weights("data/model3.h5")
 # compare_models(model1, model1, 100)
 #
 # start_time = time.time()
@@ -99,12 +99,12 @@ def make_initial_training_data(num_games, filename = None):
 # while True:
 #     print(time.time() - start_time)
 #     train_from_selfplay(model1, 10, 300, False)
-#     model1.save_weights('../data/model3.h5')
+#     model1.save_weights('data/model3.h5')
 #     show_game(model1, model1)
 #     compare_models(model1, model1, 100)
 
 # train_from_file(model1, "games1.npz", 1)
-# model1.save_weights('../data/model1.h5')
+# model1.save_weights('data/model1.h5')
 
 
 # start_time = time.time()
@@ -112,7 +112,7 @@ def make_initial_training_data(num_games, filename = None):
 # while True:
 #     print(time.time() - start_time)
 #     train_from_selfplay(model2, 10, 300, False)
-#     model2.save_weights('../data/model4.h5')
+#     model2.save_weights('data/model4.h5')
 #     show_game(model2, model2)
 #     compare_models(model2, model2, 100)
 #     print("-")

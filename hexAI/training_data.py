@@ -42,7 +42,7 @@ def make_training_data(games, num_initial_moves, filename=None):
         total_moves_counter += counter_diff
 
     if filename is not None:
-        np.savez("../data/%s" % filename,
+        np.savez("data/%s" % filename,
                  winners=winners,
                  move_numbers=move_numbers,
                  **model_input)
