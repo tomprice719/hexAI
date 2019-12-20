@@ -9,8 +9,8 @@ class TestAll(unittest.TestCase):
     def test_main_model(self):
         good_model = get_main_model()
         bad_model = RandomModel()
-        self.assertEqual(compare_models(good_model, bad_model, 10), 1)
-        self.assertEqual(compare_models(bad_model, good_model, 10), 0)
+        self.assertEqual(compare_models(good_model, bad_model, 10), 1.0)
+        self.assertEqual(compare_models(bad_model, good_model, 10), 0.0)
 
     def test_new_model(self):
         model_input, winners, move_numbers = make_initial_training_data(5000)
@@ -24,5 +24,5 @@ class TestAll(unittest.TestCase):
             validation_split=0.1
         )
         bad_model = RandomModel()
-        self.assertEqual(compare_models(good_model, bad_model, 10), 1)
-        self.assertEqual(compare_models(bad_model, good_model, 10), 0)
+        self.assertEqual(compare_models(good_model, bad_model, 10), 1.0)
+        self.assertEqual(compare_models(bad_model, good_model, 10), 0.0)

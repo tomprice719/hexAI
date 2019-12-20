@@ -2,12 +2,11 @@
 
 import numpy as np
 from .config import board_size
-from .board_utils import Board, Player, opposite_player
+from .board_utils import Player, opposite_player
 from random import randint
 from enum import Enum
 import math
-from .position_utils import create_position, update_position, \
-    initialize_model_input, fill_model_input, update_model_input
+from .position_utils import ArrayBoard, initialize_model_input, fill_model_input, update_model_input
 
 
 def sigmoid(x):
@@ -24,10 +23,8 @@ class GamePhase(Enum):
 class GameMaker:
 
     def __init__(self, board_size, num_initial_moves, allow_swap):
-        self.board = Board(board_size)
-        self.position = dict()
+        self.board = ArrayBoard(board_size)
         self.allow_swap = allow_swap
-        self.position = create_position()
         self.current_player = Player.RED
         self.moves_played = []
         self.valid_moves = list(self.board.all_points)
@@ -53,7 +50,7 @@ class GameMaker:
             return
         else:
             fill_model_input(model_input,
-                             self.position,
+                             self.board.array_position,
                              self.current_player,
                              slice_)
             update_model_input(model_input,
@@ -66,8 +63,6 @@ class GameMaker:
     def _play_move(self, move_index, annotation=None):
         """Plays a move on the board, where the move is specified by its index in valid_moves"""
         move = self.valid_moves[move_index]
-
-        update_position(self.position, self.current_player, move)
 
         self.board.update(Player(self.current_player), move)
         self.current_player = opposite_player(self.current_player)

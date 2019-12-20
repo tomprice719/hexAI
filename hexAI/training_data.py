@@ -1,13 +1,13 @@
 import numpy as np
 from .board_utils import Player
-from .position_utils import create_position, update_position, initialize_model_input, fill_model_input
+from .position_utils import create_array_position, update_array_position, initialize_model_input, fill_model_input
 
 
 def _add_game(model_input, winners, move_numbers, moves, winner, num_initial_moves, starting_index):
-    position = create_position()
+    position = create_array_position()
 
     for i, (move, annotation) in enumerate(moves):
-        update_position(position, Player(i % 2), move)
+        update_array_position(position, Player(i % 2), move)
 
         # update training data
         j = i - num_initial_moves
