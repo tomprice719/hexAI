@@ -14,16 +14,6 @@ input_names = {(0, False): "current_player_no_flip",
                (1, True): "opposite_player_180_flip"}
 
 
-class ArrayBoard(Board):
-    def __init__(self, board_size):
-        Board.__init__(self, board_size)
-        self.array_position = create_array_position()
-
-    def update(self, player, point):
-        Board.update(self, player, point)
-        update_array_position(self.array_position, player, point)
-
-
 def transform_coordinates(point, player_perspective, flip):
     a, b = point
     a1, b1 = (a, b) if player_perspective == 0 else (b, a)
@@ -39,6 +29,16 @@ def update_array_position(position, player, point):
     for player_perspective, flipped in itertools.product((0, 1), (False, True)):
         a, b = transform_coordinates(point, player_perspective, flipped)
         position[player_perspective, flipped][a, b, (player + player_perspective) % 2] = 1
+
+
+class ArrayBoard(Board):
+    def __init__(self, board_size):
+        Board.__init__(self, board_size)
+        self.array_position = create_array_position()
+
+    def update(self, player, point):
+        Board.update(self, player, point)
+        update_array_position(self.array_position, player, point)
 
 
 def initialize_model_input(num_positions):
