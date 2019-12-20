@@ -7,7 +7,7 @@ from keras.losses import BinaryCrossentropy
 from keras.metrics import BinaryAccuracy
 import itertools
 from .config import board_size, main_model_args, main_model_location
-from .position_utils import input_names
+from .model_input import input_names
 import numpy as np
 
 

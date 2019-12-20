@@ -2,7 +2,7 @@ if __name__ == "__main__":
     from .config import board_size
     from .board_utils import Player
     from .model import get_main_model
-    from .position_utils import ArrayBoard
+    from .model_input import ArrayBoard
     from .minimax_player import minimax_move
     import yaml
 

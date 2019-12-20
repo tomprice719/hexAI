@@ -1,7 +1,7 @@
 import unittest
 from hexAI.model import get_main_model, create_model, RandomModel
-from hexAI.main import compare_models
-from hexAI.main import make_initial_training_data
+from hexAI.training import compare_models
+from hexAI.training import make_initial_training_data
 
 
 class TestAll(unittest.TestCase):

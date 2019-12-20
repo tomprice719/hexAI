@@ -2,7 +2,7 @@ from .config import board_size
 import numpy as np
 from .board_utils import Player, opposite_player
 from .model import get_main_model
-from .position_utils import ArrayBoard, initialize_model_input, fill_model_input, update_model_input
+from .model_input import ArrayBoard, initialize_model_input, fill_model_input, update_model_input
 import itertools
 import yaml
 from string import ascii_uppercase

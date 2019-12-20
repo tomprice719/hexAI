@@ -6,7 +6,7 @@ from .board_utils import Player, opposite_player
 from random import randint
 from enum import Enum
 import math
-from .position_utils import ArrayBoard, initialize_model_input, fill_model_input, update_model_input
+from .model_input import ArrayBoard, initialize_model_input, fill_model_input, update_model_input
 
 
 def sigmoid(x):
