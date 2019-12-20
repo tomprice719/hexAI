@@ -8,6 +8,14 @@ from keras.metrics import BinaryAccuracy
 import itertools
 from .config import board_size, main_model_args, main_model_location
 from .position_utils import input_names
+import numpy as np
+
+
+class RandomModel():
+    def predict(self, model_input):
+        shape = set(model_input[k].shape for k in input_names.values())
+        assert (len(shape) == 1)
+        return np.random.uniform(-1.0, 1.0, shape.pop()[0])
 
 
 def create_model(depth=5, breadth=20, learning_rate=0.001):
