@@ -129,7 +129,7 @@ def make_games(model_a, model_b, games_required, num_initial_moves, batch_size=3
 
             for g in game_makers:
                 g.fill_model_input(model_input,
-                                 np.s_[position_counter: position_counter + g.num_positions_required()])
+                                   np.s_[position_counter: position_counter + g.num_positions_required()])
                 position_counter += g.num_positions_required()
 
             win_logits = model.predict(model_input)
@@ -147,6 +147,6 @@ def make_games(model_a, model_b, games_required, num_initial_moves, batch_size=3
         game_makers += [GameMaker(board_size, num_initial_moves, allow_swap)
                         for _ in range(min(new_games_required, batch_size - len(game_makers)))]
 
-    assert(len(games) == games_required)
+    assert (len(games) == games_required)
 
     return games

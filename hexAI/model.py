@@ -39,6 +39,10 @@ def create_model(depth=5, breadth=20, learning_rate=0.001):
     return model
 
 
+def get_new_model():
+    return create_model(**main_model_args)
+
+
 def get_main_model():
     model = create_model(**main_model_args)
     model.load_weights(main_model_location)

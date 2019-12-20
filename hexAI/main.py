@@ -17,18 +17,21 @@ import time
 num_initial_moves = 2
 
 
-def compare_models(model1, model2, num_games):
+def compare_models(model1, model2, num_games, verbose = True):
     results = [(winner, swapped)
                for game, winner, swapped
                in make_smart_games.make_games(model1,
                                               model2,
                                               num_games,
                                               num_initial_moves)]
-    for winner, swapped in itertools.product(Player, (False, True)):
-        print("winner: %s swapped: %s count: %d" %
-              (winner.name, swapped, results.count((winner, swapped))))
     model1_wins = results.count((Player.RED, False)) + results.count((Player.BLUE, True))
-    print("win ratio %f" % (model1_wins / num_games))
+    win_ratio = (model1_wins / num_games)
+    if verbose:
+        for winner, swapped in itertools.product(Player, (False, True)):
+            print("winner: %s swapped: %s count: %d" %
+                  (winner.name, swapped, results.count((winner, swapped))))
+        print("win ratio %f" % win_ratio)
+    return win_ratio
 
 
 def show_game(red_model, blue_model, num_games=1):
@@ -87,18 +90,18 @@ def make_initial_training_data(num_games, filename):
     make_training_data(games, 0, filename)
 
 
-model1 = create_model(depth=5, breadth=20)
-model1.load_weights("../data/model3.h5")
-compare_models(model1, model1, 100)
-
-start_time = time.time()
-
-while True:
-    print(time.time() - start_time)
-    train_from_selfplay(model1, 10, 300, False)
-    model1.save_weights('../data/model3.h5')
-    show_game(model1, model1)
-    compare_models(model1, model1, 100)
+# model1 = create_model(depth=5, breadth=20)
+# model1.load_weights("../data/model3.h5")
+# compare_models(model1, model1, 100)
+#
+# start_time = time.time()
+#
+# while True:
+#     print(time.time() - start_time)
+#     train_from_selfplay(model1, 10, 300, False)
+#     model1.save_weights('../data/model3.h5')
+#     show_game(model1, model1)
+#     compare_models(model1, model1, 100)
 
 # train_from_file(model1, "games1.npz", 1)
 # model1.save_weights('../data/model1.h5')
