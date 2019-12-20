@@ -24,10 +24,10 @@ def get_bridge_saving_moves(board, player, move):
             yield neighbours[i]
 
 
-def make_game(board, starting_moves=(), index=None):
+def make_game(starting_moves=(), index=None):
     if index is not None and index % 1000 == 0:
         print("Creating game", index)
-    board.refresh()
+    board = Board(board_size)
     random_moves = list(board.all_points)
     shuffle(random_moves)
     already_played_set = set()
@@ -66,9 +66,8 @@ def make_game(board, starting_moves=(), index=None):
 
 def make_games(num_games):
     games = []
-    board = Board(board_size)
     for i in range(num_games):
         if i % 1000 == 0:
             print("Making game %d" % i)
-        games.append(make_game(board))
+        games.append(make_game())
     return games

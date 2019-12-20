@@ -74,17 +74,14 @@ def get_move(valid_moves):
             print("Invalid move.")
 
 
-def play_auto(model):
+def play_auto(model, starting_move):
     board = Board(board_size)
     valid_moves = list(board.all_points)
     position = create_position()
 
-    print(board)
-
-    move = get_move(valid_moves)
-    valid_moves.remove(move)
-    update_position(position, Player.RED, move)
-    board.update(Player.RED, move)
+    valid_moves.remove(starting_move)
+    update_position(position, Player.RED, starting_move)
+    board.update(Player.RED, starting_move)
 
     print(board)
 

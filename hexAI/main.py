@@ -85,9 +85,9 @@ def train_from_file(model, filename, num_epochs):
     )
 
 
-def make_initial_training_data(num_games, filename):
+def make_initial_training_data(num_games, filename = None):
     games = make_dumb_games.make_games(num_games)
-    make_training_data(games, 0, filename)
+    return make_training_data(games, 0, filename)
 
 
 # model1 = create_model(depth=5, breadth=20)
