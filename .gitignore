@@ -1,5 +1,5 @@
 *.npz
 .idea/
-data/
+data/*
 *.pyc
 *.h5
