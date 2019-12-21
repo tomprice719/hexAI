@@ -20,7 +20,8 @@ def minimax_move(board, current_player, model, valid_moves, breadth=None):
         current_player: element of Player enum representing the current player.
         model: model that computes the win probabilities
         valid_moves: a list of all unoccupied points on the board
-        breadth: the number of moves, at the first ply, to compute 2-ply minimax win probabilities for
+        breadth: the number of moves, at the first ply, to compute 2-ply minimax win probabilities for. If none,
+        does full 2-ply minimax.
     """
 
     if breadth is None:
@@ -37,7 +38,7 @@ def minimax_move(board, current_player, model, valid_moves, breadth=None):
                        np.s_[:])
     one_ply_logits = model.predict(model_input)
 
-    #Prevents equal win probabilities in case the board position is symmetrical
+    # Prevents equal win probabilities in case the board position is symmetrical
     one_ply_logits += np.random.uniform(0.0, 0.00001, one_ply_logits.shape)
 
     minimax_move_indices, minimax_moves = zip(*[(i, move)
@@ -83,9 +84,10 @@ def minimax_move(board, current_player, model, valid_moves, breadth=None):
 def _get_move(valid_moves):
     while True:
         try:
+            print("Your move: ", end="")
             input_ = input().strip().upper()
             if len(input_) < 2:
-                raise ValueError("Invalid move.")
+                raise ValueError
             a = ascii_uppercase.index(input_[0])
             b = int(input_[1:]) - 1
             if (a, b) not in valid_moves:
@@ -95,9 +97,21 @@ def _get_move(valid_moves):
             print("Invalid move.")
 
 
-def play_auto(model, starting_move):
+def _get_breadth():
+    while True:
+        try:
+            print("Search breadth: ", end="")
+            breadth = int(input())
+            if breadth < 0 or breadth > board_size ** 2:
+                raise ValueError
+            return breadth
+        except ValueError:
+            print("Invalid input.")
+
+
+def play_auto(model, starting_move, breadth):
     """
-    Have the AI play against itself, with a provided starting move.
+    Have the AI play against itself, with a provided starting move and search breadth.
     """
     board = ArrayBoard(board_size)
     valid_moves = list(board.all_points)
@@ -118,7 +132,7 @@ def play_auto(model, starting_move):
         if board.winner is not None:
             break
 
-        move, win_logit = minimax_move(board, Player.RED, model, valid_moves)
+        move, win_logit = minimax_move(board, Player.RED, model, valid_moves, breadth)
         valid_moves.remove(move)
         board.update(Player.RED, move)
 
@@ -141,9 +155,19 @@ def play_with_swap(model):
     may_swap = True
     current_player = Player.RED
 
+    print("Please enter the search breadth, a whole number between 0 and %d." % board_size ** 2)
+    print("With a larger search breadth, I will think longer and play better moves.")
+    breadth = _get_breadth()
+
     print(board)
 
     while board.winner is None:
+        if may_swap is True:
+            print("It is your move. You are red.")
+            print("Please enter your move coordinates, e.g. A1 to play in the top left corner.")
+            print("We are playing with the pie rule, \
+            so if your first move is too good,I can choose to swap positions with you")
+
         move = _get_move(valid_moves)
         valid_moves.remove(move)
         board.update(current_player, move)
@@ -156,7 +180,8 @@ def play_with_swap(model):
         if may_swap is True and opening_win_logits[str(move)] > 0:
             print("SWAPPED. You are now blue. It is your turn again.")
         else:
-            move, win_logit = minimax_move(board, current_player, model, valid_moves)
+            print("Thinking...")
+            move, win_logit = minimax_move(board, current_player, model, valid_moves, breadth)
             valid_moves.remove(move)
             board.update(current_player, move)
             current_player = opposite_player(current_player)
@@ -165,14 +190,21 @@ def play_with_swap(model):
         may_swap = False
 
 
-def play_withouit_swap(model):
+def play_without_swap(model):
     """
     Play as first player against the AI, with no pie rule.
     """
     board = ArrayBoard(board_size)
     valid_moves = list(board.all_points)
 
+    print("Please enter the search breadth, a whole number between 0 and %d." % board_size ** 2)
+    print("With a larger search breadth, I will think longer and play better moves.")
+    breadth = _get_breadth()
+
     print(board)
+
+    print("It is your move. You are red.")
+    print("Please enter your move coordinates, e.g. A1 to play in the top left corner.")
 
     while board.winner is None:
         move = _get_move(valid_moves)
@@ -184,7 +216,8 @@ def play_withouit_swap(model):
         if board.winner is not None:
             break
 
-        move, win_logit = minimax_move(board, Player.BLUE, model, valid_moves)
+        print("Thinking...")
+        move, win_logit = minimax_move(board, Player.BLUE, model, valid_moves, breadth)
         valid_moves.remove(move)
         board.update(Player.BLUE, move)
 
