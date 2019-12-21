@@ -36,6 +36,10 @@ class GamePhase(Enum):
     FINISHED = 4
 
 
+def _make_annotation(model_label, win_logit):
+    return "Model: %s, win logit: %s, win probability: %s" % (model_label, win_logit, sigmoid(win_logit))
+
+
 class GameMaker:
 
     def __init__(self, num_initial_moves, allow_swap):
@@ -90,8 +94,9 @@ class GameMaker:
         if self.game_phase == GamePhase.BEFORE_SWAP:
             medium_move_index = min(range(len(self.valid_moves)),
                                     key=lambda x: abs(win_logits[x]))
-            medium_move_logits = float(win_logits[medium_move_index])
-            self._play_move(medium_move_index, (model_label, medium_move_logits, sigmoid(medium_move_logits)))
+            medium_move_logit = float(win_logits[medium_move_index])
+            self._play_move(medium_move_index,
+                            _make_annotation(model_label, medium_move_logit))
             if self.allow_swap:
                 self.game_phase = GamePhase.MAY_SWAP
             else:
@@ -100,9 +105,10 @@ class GameMaker:
         if self.game_phase == GamePhase.MAY_SWAP:
             best_move_index = max(range(len(self.valid_moves)),
                                   key=lambda x: win_logits[x])
-            best_move_logits = float(win_logits[best_move_index])
-            if best_move_logits > 0:
-                self._play_move(best_move_index, (model_label, best_move_logits, sigmoid(best_move_logits)))
+            best_move_logit = float(win_logits[best_move_index])
+            if best_move_logit > 0:
+                self._play_move(best_move_index,
+                                _make_annotation(model_label, best_move_logit))
                 self.swapped = False
             else:
                 self.swapped = True
@@ -111,8 +117,9 @@ class GameMaker:
         if self.game_phase == GamePhase.AFTER_SWAP:
             best_move_index = max(range(len(self.valid_moves)),
                                   key=lambda x: win_logits[x])
-            best_move_logits = float(win_logits[best_move_index])
-            self._play_move(best_move_index, (model_label, best_move_logits, sigmoid(best_move_logits)))
+            best_move_logit = float(win_logits[best_move_index])
+            self._play_move(best_move_index,
+                            _make_annotation(model_label, best_move_logit))
             if self.board.winner is not None:
                 self.game_phase = GamePhase.FINISHED
             return

@@ -54,7 +54,7 @@ def train_from_selfplay(model, new_games_per_epoch, num_iterations, use_weight=F
     """
     for i in range(num_iterations):
         if i % 10 == 0:
-            print(i)
+            print("At iteration %d" % i)
         games = smart_games.make_games(
             model,
             model,

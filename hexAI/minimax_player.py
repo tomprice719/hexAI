@@ -8,7 +8,7 @@ import yaml
 from string import ascii_uppercase
 
 
-def minimax_move(board, current_player, model, valid_moves, breadth=10):
+def minimax_move(board, current_player, model, valid_moves, breadth=None):
     """
     Get the best move to play, determined with a partial 2-ply minimax.
     First, depth-1 win probabilities are computed,
@@ -22,6 +22,12 @@ def minimax_move(board, current_player, model, valid_moves, breadth=10):
         valid_moves: a list of all unoccupied points on the board
         breadth: the number of moves, at the first ply, to compute 2-ply minimax win probabilities for
     """
+
+    if breadth is None:
+        breadth = len(valid_moves)
+    else:
+        breadth = min(breadth, len(valid_moves))
+
     model_input = new_model_input(len(valid_moves))
     fill_model_input(model_input, board.array_position, current_player, np.s_[:])
     update_model_input(model_input,
@@ -30,6 +36,9 @@ def minimax_move(board, current_player, model, valid_moves, breadth=10):
                        current_player,
                        np.s_[:])
     one_ply_logits = model.predict(model_input)
+
+    #Prevents equal win probabilities in case the board position is symmetrical
+    one_ply_logits += np.random.uniform(0.0, 0.00001, one_ply_logits.shape)
 
     minimax_move_indices, minimax_moves = zip(*[(i, move)
                                                 for i, move in enumerate(valid_moves)
