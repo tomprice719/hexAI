@@ -76,8 +76,6 @@ def minimax_move(board, current_player, model, valid_moves, breadth=None):
     best_response_index, best_response = max(enumerate(valid_moves), key=lambda x: one_ply_logits[x[0]])
     assert one_ply_logits[best_response_index] == max(one_ply_logits)
 
-    print(best_response in minimax_moves)
-
     return best_response, one_ply_logits[best_response_index]
 
 
@@ -155,27 +153,26 @@ def play_with_swap(model):
     may_swap = True
     current_player = Player.RED
 
-    print("Please enter the search breadth, a whole number between 0 and %d." % board_size ** 2)
+    print("Please enter the search breadth, a whole number from 0 to %d." % board_size ** 2)
     print("With a larger search breadth, I will think longer and play better moves.")
     breadth = _get_breadth()
 
     print(board)
 
-    while board.winner is None:
-        if may_swap is True:
-            print("It is your move. You are red.")
-            print("Please enter your move coordinates, e.g. A1 to play in the top left corner.")
-            print("We are playing with the pie rule, \
-            so if your first move is too good,I can choose to swap positions with you")
+    print("It is your move. You are red.")
+    print("Please enter your move coordinates, e.g. A1 to play in the top left corner.")
+    print("We are playing with the pie rule, \
+so if your first move is too good, I can choose to swap positions with you.")
 
+    while board.winner is None:
         move = _get_move(valid_moves)
         valid_moves.remove(move)
         board.update(current_player, move)
         current_player = opposite_player(current_player)
         print(board)
 
-        if board.winner is not None:
-            break
+        if board.winner == current_player:
+            print("You win!")
 
         if may_swap is True and opening_win_logits[str(move)] > 0:
             print("SWAPPED. You are now blue. It is your turn again.")
@@ -188,6 +185,8 @@ def play_with_swap(model):
             print(board)
 
         may_swap = False
+
+    print("I win!")
 
 
 def play_without_swap(model):
@@ -213,8 +212,8 @@ def play_without_swap(model):
 
         print(board)
 
-        if board.winner is not None:
-            break
+        if board.winner == Player.RED:
+            print("You win!")
 
         print("Thinking...")
         move, win_logit = minimax_move(board, Player.BLUE, model, valid_moves, breadth)
@@ -222,6 +221,7 @@ def play_without_swap(model):
         board.update(Player.BLUE, move)
 
         print(board)
+    print("I win!")
 
 
 if __name__ == "__main__":
