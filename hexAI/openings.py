@@ -3,7 +3,7 @@ if __name__ == "__main__":
     from .board_utils import Player
     from .model import get_main_model
     from .model_input import ArrayBoard
-    from .minimax_player import minimax_move
+    from .minimax_player import _minimax_move
     import yaml
 
     board = ArrayBoard(board_size)
@@ -15,7 +15,7 @@ if __name__ == "__main__":
     for move in board.all_points:
         valid_moves = list(board.all_points)
         valid_moves.remove(move)
-        opening_win_logits[str(move)] = float(-minimax_move(board, Player.BLUE, model, valid_moves)[1])
+        opening_win_logits[str(move)] = float(-_minimax_move(board, Player.BLUE, model, valid_moves)[1])
         print(move, opening_win_logits[(str(move))])
 
     with open('data/opening_win_logits.yaml', 'w') as f:

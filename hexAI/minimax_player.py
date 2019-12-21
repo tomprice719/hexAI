@@ -8,7 +8,7 @@ import yaml
 from string import ascii_uppercase
 
 
-def minimax_move(board, current_player, model, valid_moves, breadth=10):
+def _minimax_move(board, current_player, model, valid_moves, breadth=10):
     model_input = initialize_model_input(len(valid_moves))
     fill_model_input(model_input, board.array_position, current_player, np.s_[:])
     update_model_input(model_input,
@@ -84,7 +84,7 @@ def play_auto(model, starting_move):
 
     while board.winner is None:
 
-        move, win_logit = minimax_move(board, Player.BLUE, model, valid_moves)
+        move, win_logit = _minimax_move(board, Player.BLUE, model, valid_moves)
         valid_moves.remove(move)
         board.update(Player.BLUE, move)
 
@@ -93,7 +93,7 @@ def play_auto(model, starting_move):
         if board.winner is not None:
             break
 
-        move, win_logit = minimax_move(board, Player.RED, model, valid_moves)
+        move, win_logit = _minimax_move(board, Player.RED, model, valid_moves)
         valid_moves.remove(move)
         board.update(Player.RED, move)
 
@@ -128,7 +128,7 @@ def play_with_swap(model):
         if may_swap is True and opening_win_logits[str(move)] > 0:
             print("SWAPPED. You are now blue. It is your turn again.")
         else:
-            move, win_logit = minimax_move(board, current_player, model, valid_moves)
+            move, win_logit = _minimax_move(board, current_player, model, valid_moves)
             valid_moves.remove(move)
             board.update(current_player, move)
             current_player = opposite_player(current_player)
@@ -153,7 +153,7 @@ def play(model):
         if board.winner is not None:
             break
 
-        move, win_logit = minimax_move(board, Player.BLUE, model, valid_moves)
+        move, win_logit = _minimax_move(board, Player.BLUE, model, valid_moves)
         valid_moves.remove(move)
         board.update(Player.BLUE, move)
 

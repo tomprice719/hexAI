@@ -22,7 +22,7 @@ class GamePhase(Enum):
 
 class GameMaker:
 
-    def __init__(self, board_size, num_initial_moves, allow_swap):
+    def __init__(self, num_initial_moves, allow_swap):
         self.board = ArrayBoard(board_size)
         self.allow_swap = allow_swap
         self.current_player = Player.RED
@@ -107,7 +107,7 @@ class GameMaker:
 
 
 def make_games(model_a, model_b, games_required, num_initial_moves, batch_size=3, allow_swap=True):
-    game_makers = [GameMaker(board_size, num_initial_moves, allow_swap) for _ in range(batch_size)]
+    game_makers = [GameMaker(num_initial_moves, allow_swap) for _ in range(batch_size)]
     games = []
 
     if num_initial_moves % 2 == 0:
@@ -139,7 +139,7 @@ def make_games(model_a, model_b, games_required, num_initial_moves, batch_size=3
         game_makers = [g for g in game_makers if not g.finished()]
         new_games_required = games_required - len(games) - len(game_makers)
         assert new_games_required >= 0
-        game_makers += [GameMaker(board_size, num_initial_moves, allow_swap)
+        game_makers += [GameMaker(num_initial_moves, allow_swap)
                         for _ in range(min(new_games_required, batch_size - len(game_makers)))]
 
     assert (len(games) == games_required)

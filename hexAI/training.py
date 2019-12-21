@@ -1,5 +1,5 @@
-from . import make_smart_games
-from . import make_dumb_games
+from . import smart_games
+from . import dumb_games
 from .training_data import make_training_data
 from .board_utils import Board, Player
 from .config import board_size
@@ -20,22 +20,22 @@ num_initial_moves = 2
 def compare_models(model1, model2, num_games, verbose = True):
     results = [(winner, swapped)
                for game, winner, swapped
-               in make_smart_games.make_games(model1,
-                                              model2,
-                                              num_games,
-                                              num_initial_moves)]
+               in smart_games.make_games(model1,
+                                         model2,
+                                         num_games,
+                                         num_initial_moves)]
     model1_wins = results.count((Player.RED, False)) + results.count((Player.BLUE, True))
     win_ratio = (model1_wins / num_games)
     if verbose:
         for winner, swapped in itertools.product(Player, (False, True)):
-            print("winner: %s swapped: %s count: %d" %
+            print("winner: %s, swapped: %s, count: %d" %
                   (winner.name, swapped, results.count((winner, swapped))))
         print("win ratio %f" % win_ratio)
     return win_ratio
 
 
 def show_game(red_model, blue_model, num_games=1):
-    games = make_smart_games.make_games(red_model, blue_model, num_games, num_initial_moves, batch_size=1)
+    games = smart_games.make_games(red_model, blue_model, num_games, num_initial_moves, batch_size=1)
     for moves, winner, swapped in games:
         b = Board(board_size)
         for i, (move, annotation) in enumerate(moves):
@@ -51,7 +51,7 @@ def train_from_selfplay(model, new_games_per_epoch, num_iterations, use_weight=F
     for i in range(num_iterations):
         if i % 10 == 0:
             print(i)
-        games = make_smart_games.make_games(
+        games = smart_games.make_games(
             model,
             model,
             new_games_per_epoch,
@@ -85,8 +85,8 @@ def train_from_file(model, filename, num_epochs):
     )
 
 
-def make_initial_training_data(num_games, filename = None):
-    games = make_dumb_games.make_games(num_games)
+def make_initial_training_data(num_games, filename=None):
+    games = dumb_games.make_games(num_games)
     return make_training_data(games, 0, filename)
 
 

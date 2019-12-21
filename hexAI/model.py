@@ -11,7 +11,7 @@ from .model_input import input_names
 import numpy as np
 
 
-class RandomModel():
+class RandomModel:
     def predict(self, model_input):
         shape = set(model_input[k].shape for k in input_names.values())
         assert (len(shape) == 1)

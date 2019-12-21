@@ -3,7 +3,7 @@ from .config import board_size
 from random import shuffle, choice
 
 
-def get_bridge_saving_moves(board, player, move):
+def _get_bridge_saving_moves(board, player, move):
     def get_colour(point):
         a1, b1 = point
         if b1 < 0 or b1 >= board_size or board.has_hex(Player.RED, point):
@@ -59,7 +59,7 @@ def make_game(starting_moves=(), index=None):
         board.update(Player(i % 2), next_move)
         already_played_set.add(next_move)
         already_played_list.append(next_move)
-        bridge_saving_moves = list(get_bridge_saving_moves(board, Player(i % 2), next_move))
+        bridge_saving_moves = list(_get_bridge_saving_moves(board, Player(i % 2), next_move))
     print(board)  # should never get here, printing board might give useful debugging information if we do
     assert False
 
