@@ -1,6 +1,6 @@
 from .config import board_size
 import numpy as np
-from .board_utils import Player, opposite_player
+from .board_utils import Player, opposite_player, all_points
 from .model import get_main_model
 from .model_input import ArrayBoard, new_model_input, fill_model_input, update_model_input
 import itertools
@@ -112,7 +112,7 @@ def play_auto(model, starting_move, breadth):
     Have the AI play against itself, with a provided starting move and search breadth.
     """
     board = ArrayBoard(board_size)
-    valid_moves = list(board.all_points)
+    valid_moves = list(all_points(board_size))
 
     valid_moves.remove(starting_move)
     board.update(Player.RED, starting_move)
@@ -145,7 +145,7 @@ def play_with_swap(model):
     Play as first player against the AI, using the pie rule.
     """
     board = ArrayBoard(board_size)
-    valid_moves = list(board.all_points)
+    valid_moves = list(all_points(board_size))
 
     with open('data/opening_win_logits.yaml', 'r') as f:
         opening_win_logits = yaml.load(f)
@@ -195,7 +195,7 @@ def play_without_swap(model):
     Play as first player against the AI, with no pie rule.
     """
     board = ArrayBoard(board_size)
-    valid_moves = list(board.all_points)
+    valid_moves = list(all_points(board_size))
 
     print("Please enter the search breadth, a whole number between 0 and %d." % board_size ** 2)
     print("With a larger search breadth, I will think longer and play better moves.")

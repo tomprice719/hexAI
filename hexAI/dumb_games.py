@@ -18,7 +18,7 @@ Moves are represented as a list of (point, annotation) tuples.
 Since no annotations are implemented in this module, the annotation is always None.
 """
 
-from .board_utils import Board, neighbour_difference, Player, opposite_player
+from .board_utils import Board, neighbour_difference, Player, opposite_player, all_points
 from .config import board_size
 from random import shuffle, choice
 
@@ -52,12 +52,12 @@ def make_game(starting_moves=()):
     See the module docstring for more information.
     """
     board = Board(board_size)
-    random_moves = list(board.all_points)
+    random_moves = list(all_points(board_size))
     shuffle(random_moves)
     already_played_set = set()
     already_played_list = []
     bridge_saving_moves = None
-    for i in range(len(board.all_points)):
+    for i in range(board_size ** 2):
         if i < len(starting_moves):
             next_move = starting_moves[i]
         else:

@@ -18,7 +18,7 @@ if the players swap in accordance with the pie rule, it will be the opposite.
 """
 import numpy as np
 from .config import board_size
-from .board_utils import Player, opposite_player
+from .board_utils import Player, opposite_player, all_points
 from random import randint
 from enum import Enum
 import math
@@ -47,7 +47,7 @@ class GameMaker:
         self.allow_swap = allow_swap
         self.current_player = Player.RED
         self.moves_played = []
-        self.valid_moves = list(self.board.all_points)
+        self.valid_moves = list(all_points(board_size))
         self.game_phase = GamePhase.BEFORE_SWAP
         self.swapped = None
         for i in range(num_initial_moves):

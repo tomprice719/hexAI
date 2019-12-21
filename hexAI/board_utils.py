@@ -13,6 +13,10 @@ class Player(Enum):
     BLUE = 1
 
 
+def all_points(board_size):
+    return itertools.product(range(board_size), range(board_size))
+
+
 def opposite_player(player):
     return Player(1 - player.value)
 
@@ -26,6 +30,7 @@ _symbols = {(Player.RED, False): Fore.LIGHTRED_EX + u"\u25CF " + Style.RESET_ALL
 
 class Board:
     """Represents the board state during a game of hex."""
+
     def __init__(self, board_size):
         """board size: int representing number of tiles along each side of the board."""
         self.board_size = board_size
@@ -46,8 +51,6 @@ class Board:
         self._left_boundary = set(self._left)
         self._right_connected = set()
         self._right_boundary = set(self._right)
-        self.all_points = tuple(itertools.product(range(board_size), range(board_size)))
-
 
     def update(self, player, point):
         """
