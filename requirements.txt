@@ -1,0 +1,4 @@
+colorama==0.3.7
+numpy==1.16.2
+Keras==2.2.4
+PyYAML==5.2
