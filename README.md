@@ -1,6 +1,6 @@
 # hexAI
 
-An AI that plays [the game of hex](https://en.wikipedia.org/wiki/Hex_(board_game)).
+An AI that plays [the game of hex](https://en.wikipedia.org/wiki/Hex_(board_game)). It uses 2-ply minimax with a heuristic function computed by a deep convolutional neural network.
 
 To play a game:
 
