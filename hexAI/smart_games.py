@@ -1,12 +1,28 @@
-# Generates games by choosing moves with maximum win probability according to a trained model
+"""
+Use trained models to generate games,
+by choosing whatever move leads to the board position with the highest win probability.
 
+Games are represented as triples (moves, winner, swapped).
+The winner is represented with an element of the Player enum.
+See https://en.wikipedia.org/wiki/Pie_rule for an explanation of "swapped."
+
+Moves are represented as list of (point, annotation) tuples.
+The annotation gives some additional data about the move that could be useful for debugging.
+
+The models will typically be deterministic, so to keep the games diverse, the first few moves are randomized.
+The next move after that is chosen to make the winning probability as close as possible to 50 percent.
+After this, the pie rule is applied, and then the game continues normally.
+
+Note that the first player and second player do not necessarily correspond to red and blue respectively;
+if the players swap in accordance with the pie rule, it will be the opposite.
+"""
 import numpy as np
 from .config import board_size
 from .board_utils import Player, opposite_player
 from random import randint
 from enum import Enum
 import math
-from .model_input import ArrayBoard, initialize_model_input, fill_model_input, update_model_input
+from .model_input import ArrayBoard, new_model_input, fill_model_input, update_model_input
 
 
 def sigmoid(x):
@@ -106,7 +122,22 @@ class GameMaker:
         assert False
 
 
-def make_games(model_a, model_b, games_required, num_initial_moves, batch_size=3, allow_swap=True):
+def make_games(model_a, model_b, num_games, num_initial_moves, batch_size=3, allow_swap=True):
+    """
+    Create a list of games, with moves chosen by trained models.
+    Several games can be created simultaneously to make more efficient use of parallel processing.
+    See module docstring for more information.
+
+    Parameters:
+        model_a: The model used by the first player
+        model_b: the model used by the second player
+        num_games: the number of games to create in total
+        num_initial_moves: the number of moves to play randomly at the beginning of the game.
+        batch_size: the number of games to create simultaneously.
+        allow_swap: set to True to use pie rule, False otherwise.
+
+    Returns a list of games.
+    """
     game_makers = [GameMaker(num_initial_moves, allow_swap) for _ in range(batch_size)]
     games = []
 
@@ -118,7 +149,7 @@ def make_games(model_a, model_b, games_required, num_initial_moves, batch_size=3
     while game_makers:
 
         for model, label in models:
-            model_input = initialize_model_input(sum(g.num_positions_required() for g in game_makers))
+            model_input = new_model_input(sum(g.num_positions_required() for g in game_makers))
 
             position_counter = 0
 
@@ -137,11 +168,11 @@ def make_games(model_a, model_b, games_required, num_initial_moves, batch_size=3
 
         games += [g.game() for g in game_makers if g.finished()]
         game_makers = [g for g in game_makers if not g.finished()]
-        new_games_required = games_required - len(games) - len(game_makers)
+        new_games_required = num_games - len(games) - len(game_makers)
         assert new_games_required >= 0
         game_makers += [GameMaker(num_initial_moves, allow_swap)
                         for _ in range(min(new_games_required, batch_size - len(game_makers)))]
 
-    assert (len(games) == games_required)
+    assert (len(games) == num_games)
 
     return games

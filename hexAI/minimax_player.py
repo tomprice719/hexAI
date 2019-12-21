@@ -2,14 +2,27 @@ from .config import board_size
 import numpy as np
 from .board_utils import Player, opposite_player
 from .model import get_main_model
-from .model_input import ArrayBoard, initialize_model_input, fill_model_input, update_model_input
+from .model_input import ArrayBoard, new_model_input, fill_model_input, update_model_input
 import itertools
 import yaml
 from string import ascii_uppercase
 
 
-def _minimax_move(board, current_player, model, valid_moves, breadth=10):
-    model_input = initialize_model_input(len(valid_moves))
+def minimax_move(board, current_player, model, valid_moves, breadth=10):
+    """
+    Get the best move to play, determined with a partial 2-ply minimax.
+    First, depth-1 win probabilities are computed,
+    then depth-2 probabilities are computed for the best moves found by the previous step,
+    then minimax is applied to find the best move overall.
+
+    parameters:
+        board: Board object representing the current state of the game.
+        current_player: element of Player enum representing the current player.
+        model: model that computes the win probabilities
+        valid_moves: a list of all unoccupied points on the board
+        breadth: the number of moves, at the first ply, to compute 2-ply minimax win probabilities for
+    """
+    model_input = new_model_input(len(valid_moves))
     fill_model_input(model_input, board.array_position, current_player, np.s_[:])
     update_model_input(model_input,
                        valid_moves,
@@ -26,7 +39,7 @@ def _minimax_move(board, current_player, model, valid_moves, breadth=10):
              for move1, move2 in itertools.product(minimax_moves, valid_moves)
              if move1 != move2]
 
-    model_input = initialize_model_input(len(moves))
+    model_input = new_model_input(len(moves))
     fill_model_input(model_input, board.array_position, opposite_player(current_player), np.s_[:])
     update_model_input(model_input,
                        [move1 for move1, move2 in moves],
@@ -58,7 +71,7 @@ def _minimax_move(board, current_player, model, valid_moves, breadth=10):
     return best_response, one_ply_logits[best_response_index]
 
 
-def get_move(valid_moves):
+def _get_move(valid_moves):
     while True:
         try:
             input_ = input().strip().upper()
@@ -74,6 +87,9 @@ def get_move(valid_moves):
 
 
 def play_auto(model, starting_move):
+    """
+    Have the AI play against itself, with a provided starting move.
+    """
     board = ArrayBoard(board_size)
     valid_moves = list(board.all_points)
 
@@ -84,7 +100,7 @@ def play_auto(model, starting_move):
 
     while board.winner is None:
 
-        move, win_logit = _minimax_move(board, Player.BLUE, model, valid_moves)
+        move, win_logit = minimax_move(board, Player.BLUE, model, valid_moves)
         valid_moves.remove(move)
         board.update(Player.BLUE, move)
 
@@ -93,7 +109,7 @@ def play_auto(model, starting_move):
         if board.winner is not None:
             break
 
-        move, win_logit = _minimax_move(board, Player.RED, model, valid_moves)
+        move, win_logit = minimax_move(board, Player.RED, model, valid_moves)
         valid_moves.remove(move)
         board.update(Player.RED, move)
 
@@ -104,6 +120,9 @@ def play_auto(model, starting_move):
 
 
 def play_with_swap(model):
+    """
+    Play as first player against the AI, using the pie rule.
+    """
     board = ArrayBoard(board_size)
     valid_moves = list(board.all_points)
 
@@ -116,7 +135,7 @@ def play_with_swap(model):
     print(board)
 
     while board.winner is None:
-        move = get_move(valid_moves)
+        move = _get_move(valid_moves)
         valid_moves.remove(move)
         board.update(current_player, move)
         current_player = opposite_player(current_player)
@@ -128,7 +147,7 @@ def play_with_swap(model):
         if may_swap is True and opening_win_logits[str(move)] > 0:
             print("SWAPPED. You are now blue. It is your turn again.")
         else:
-            move, win_logit = _minimax_move(board, current_player, model, valid_moves)
+            move, win_logit = minimax_move(board, current_player, model, valid_moves)
             valid_moves.remove(move)
             board.update(current_player, move)
             current_player = opposite_player(current_player)
@@ -137,14 +156,17 @@ def play_with_swap(model):
         may_swap = False
 
 
-def play(model):
+def play_withouit_swap(model):
+    """
+    Play as first player against the AI, with no pie rule.
+    """
     board = ArrayBoard(board_size)
     valid_moves = list(board.all_points)
 
     print(board)
 
     while board.winner is None:
-        move = get_move(valid_moves)
+        move = _get_move(valid_moves)
         valid_moves.remove(move)
         board.update(Player.RED, move)
 
@@ -153,7 +175,7 @@ def play(model):
         if board.winner is not None:
             break
 
-        move, win_logit = _minimax_move(board, Player.BLUE, model, valid_moves)
+        move, win_logit = minimax_move(board, Player.BLUE, model, valid_moves)
         valid_moves.remove(move)
         board.update(Player.BLUE, move)
 

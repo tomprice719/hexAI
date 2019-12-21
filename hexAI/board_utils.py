@@ -1,7 +1,10 @@
+"""Utilities for representing the state of a hex game."""
+
 from enum import Enum
 import itertools
 from colorama import Fore, Back, Style
 from string import ascii_uppercase
+
 neighbour_difference = [(-1, 0), (-1, 1), (0, 1), (1, 0), (1, -1), (0, -1)]
 
 
@@ -14,16 +17,17 @@ def opposite_player(player):
     return Player(1 - player.value)
 
 
-symbols = {(Player.RED, False): Fore.LIGHTRED_EX + u"\u25CF " + Style.RESET_ALL,
-           (Player.BLUE, False): Fore.LIGHTBLUE_EX + u"\u25CF " + Style.RESET_ALL,
-           "empty": Fore.WHITE + u"\u25CF " + Style.RESET_ALL,
-           (Player.RED, True): Fore.LIGHTRED_EX + u"\u25C9 " + Style.RESET_ALL,
-           (Player.BLUE, True): Fore.LIGHTBLUE_EX + u"\u25C9 " + Style.RESET_ALL}
+_symbols = {(Player.RED, False): Fore.LIGHTRED_EX + u"\u25CF " + Style.RESET_ALL,
+            (Player.BLUE, False): Fore.LIGHTBLUE_EX + u"\u25CF " + Style.RESET_ALL,
+            "empty": Fore.WHITE + u"\u25CF " + Style.RESET_ALL,
+            (Player.RED, True): Fore.LIGHTRED_EX + u"\u25C9 " + Style.RESET_ALL,
+            (Player.BLUE, True): Fore.LIGHTBLUE_EX + u"\u25C9 " + Style.RESET_ALL}
 
 
 class Board:
-
+    """Represents the board state during a game of hex."""
     def __init__(self, board_size):
+        """board size: int representing number of tiles along each side of the board."""
         self.board_size = board_size
         self.winner = None
         self._hexes = dict((p, set()) for p in Player)
@@ -44,20 +48,34 @@ class Board:
         self._right_boundary = set(self._right)
         self.all_points = tuple(itertools.product(range(board_size), range(board_size)))
 
-    def is_empty(self):
-        return not any(self._hexes[p] for p in Player)
 
     def update(self, player, point):
+        """
+        Adds a hex tile to the board.
+
+        player: element of Player enum representing which player adds the tile.
+        point: a tuple of integers representing the coordinates of the point.
+        """
         assert (all(point not in self._hexes[p] for p in Player))
         self._hexes[player].add(point)
         self._update_sets(player, point)
         self._last_move = point
 
-    def legal_move(self, point):
-        return not any(self.has_hex(p, point) for p in Player)
-
     def has_hex(self, player, point):
+        """
+        Checks if a point is occupied by a given player's tile.
+
+        player: element of Pleyer enum.
+        point: a tuple of integers representing the coordinates of the point.
+        """
         return point in self._hexes[player]
+
+    def legal_move(self, point):
+        """
+        Checks if a particular point on the board can legally be played in.
+        point: a tuple of integers representing the coordinates of the point.
+        """
+        return not any(self.has_hex(p, point) for p in Player)
 
     def _starting_side(self, player, point):
         i, j = point
@@ -93,6 +111,10 @@ class Board:
                         boundary.add(neighbour)
 
     def winning_moves(self, player):
+        """
+        Gives a list of all points that would cause the given player to immediately win they played there.
+        player: element of the Player enum.
+        """
         if player == Player.RED:
             return list(self._top_boundary.intersection(self._bottom_boundary))
         if player == Player.BLUE:
@@ -129,6 +151,7 @@ class Board:
                 s += "\n"
             s += "------------------------------------"
             print(s)
+
         print_points(self._top_connected, "top connected")
         print_points(self._bottom_connected, "bottom connected")
         print_points(self._left_connected, "left connected")
@@ -145,11 +168,11 @@ class Board:
         for i in range(self.board_size):
             rep += " " * i + Back.BLUE + Fore.WHITE + "%d " % (i + 1) + Style.RESET_ALL + " "
             for j in range(self.board_size):
-                symbol = symbols["empty"]
+                symbol = _symbols["empty"]
                 for player in Player:
                     if self.has_hex(player, (j, i)):
                         new = (j, i) == self._last_move
-                        symbol = symbols[(player, new)]
+                        symbol = _symbols[(player, new)]
                 rep += symbol
             rep += Back.BLUE + "  " + Style.RESET_ALL + "\n"
         rep += " " * (self.board_size + 2) + Back.RED + " " * self.board_size * 2 + Style.RESET_ALL

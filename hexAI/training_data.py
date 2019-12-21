@@ -1,10 +1,15 @@
+"""
+The purpose of this module is the make_training_data function,
+which makes the data needed to train a model, given a list of games.
+"""
+
 import numpy as np
 from .board_utils import Player
-from .model_input import create_array_position, update_array_position, initialize_model_input, fill_model_input
+from .model_input import new_array_position, update_array_position, new_model_input, fill_model_input
 
 
 def _add_game(model_input, winners, move_numbers, moves, winner, num_initial_moves, starting_index):
-    position = create_array_position()
+    position = new_array_position()
 
     for i, (move, annotation) in enumerate(moves):
         update_array_position(position, Player(i % 2), move)
@@ -18,9 +23,23 @@ def _add_game(model_input, winners, move_numbers, moves, winner, num_initial_mov
 
 
 def make_training_data(games, num_initial_moves, filename=None):
+    """
+    Make the data needed to train a model.
+    parameters:
+        games: a list of games
+        num_initial_moves: the length of the randomized phase at the beginning of each game.
+        This section of the game will not be included in the training data.
+        filename: if this parameter is provided, save the data to a file in the data folder,
+        in addition to returning it.
+
+        returns: (model_input, winners, move_numbers) tuple
+        model_input can be used as the input of a model, and winners can be used as the target.
+        move_numbers is the number of moves that have been played for at sample of training data,
+        which can be used for weighing samples differently depending on the phase of the game.
+    """
     total_moves = sum(len(moves[num_initial_moves:]) for moves, winner, swapped in games)
 
-    model_input = initialize_model_input(total_moves)
+    model_input = new_model_input(total_moves)
 
     winners = np.zeros(total_moves, dtype="float32")
     move_numbers = np.zeros(total_moves, dtype="float32")
