@@ -155,6 +155,7 @@ def play_with_swap(model):
 
     print("Please enter the search breadth, a whole number from 0 to %d." % board_size ** 2)
     print("With a larger search breadth, I will think longer and play better moves.")
+    print("The recommended value is 10.")
     breadth = _get_breadth()
 
     print(board)
