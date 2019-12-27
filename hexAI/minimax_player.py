@@ -172,6 +172,7 @@ so if your first move is too good, I can choose to swap positions with you.")
         board.update(current_player, move)
         if board.winner == current_player:
             print("You win!")
+            return
         current_player = opposite_player(current_player)
         print(board)
 
@@ -215,6 +216,7 @@ def play_without_swap(model):
 
         if board.winner == Player.RED:
             print("You win!")
+            return
 
         print("Thinking...")
         move, win_logit = minimax_move(board, Player.BLUE, model, valid_moves, breadth)
