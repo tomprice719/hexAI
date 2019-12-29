@@ -170,11 +170,11 @@ so if your first move is too good, I can choose to swap positions with you.")
         move = _get_move(valid_moves)
         valid_moves.remove(move)
         board.update(current_player, move)
+        print(board)
         if board.winner == current_player:
             print("You win!")
             return
         current_player = opposite_player(current_player)
-        print(board)
 
         if may_swap is True and opening_win_logits[str(move)] > 0:
             print("SWAPPED. You are now blue. It is your turn again.")
@@ -183,8 +183,8 @@ so if your first move is too good, I can choose to swap positions with you.")
             move, win_logit = minimax_move(board, current_player, model, valid_moves, breadth)
             valid_moves.remove(move)
             board.update(current_player, move)
-            current_player = opposite_player(current_player)
             print(board)
+            current_player = opposite_player(current_player)
 
         may_swap = False
 
