@@ -1,3 +1,5 @@
+# Win probability for each opening move, expressed as logit
+
 (0, 0): -0.7838926315307617
 (0, 1): 0.00030891597270965576
 (0, 2): -0.2521090507507324

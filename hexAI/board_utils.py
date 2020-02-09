@@ -36,7 +36,6 @@ class Board:
         self.board_size = board_size
         self.winner = None
         self._hexes = dict((p, set()) for p in Player)
-        self._connected = dict((p, set()) for p in Player)
         self._last_move = None
         self._top = [(x, 0) for x in range(board_size)]
         self._bottom = [(x, board_size - 1) for x in range(board_size)]

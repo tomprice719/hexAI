@@ -154,7 +154,7 @@ def play_with_swap(model):
     may_swap = True
     current_player = Player.RED
 
-    print("Please enter the search breadth, a whole number from 0 to %d." % board_size ** 2)
+    print("\nPlease enter the search breadth, a whole number from 0 to %d." % board_size ** 2)
     print("With a larger search breadth, I will think longer and play better moves.")
     print("The recommended value is 10.")
     breadth = _get_breadth()
@@ -198,7 +198,7 @@ def play_without_swap(model):
     board = ArrayBoard(board_size)
     valid_moves = list(all_points(board_size))
 
-    print("Please enter the search breadth, a whole number between 0 and %d." % board_size ** 2)
+    print("\nPlease enter the search breadth, a whole number between 0 and %d." % board_size ** 2)
     print("With a larger search breadth, I will think longer and play better moves.")
     breadth = _get_breadth()
 

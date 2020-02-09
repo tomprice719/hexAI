@@ -17,6 +17,8 @@ class RandomModel:
     """
 
     def predict(self, model_input):
+        # Make sure all input board shapes are the same,
+        # then fill an output board of the same shape with random win logits
         shape = set(model_input[k].shape for k in input_names.values())
         assert (len(shape) == 1)
         return np.random.uniform(-1.0, 1.0, shape.pop()[0])

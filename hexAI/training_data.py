@@ -34,7 +34,7 @@ def make_training_data(games, num_initial_moves, filename=None):
 
         returns: (model_input, winners, move_numbers) tuple
         model_input can be used as the input of a model, and winners can be used as the target.
-        move_numbers is the number of moves that have been played for at sample of training data,
+        move_numbers is the number of moves that have been played at each sample of training data,
         which can be used for weighing samples differently depending on the phase of the game.
     """
     total_moves = sum(len(moves[num_initial_moves:]) for moves, winner, swapped in games)
